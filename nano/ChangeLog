@@ -1,4 +1,64 @@
-CVS code -
+GNU nano 1.2.3 - 2004.01.17
+- General:
+	- Translation updates (see po/ChangeLog for details).
+	- Make sure the "historylog" option isn't included at all if
+	  NANO_SMALL is defined. (DLR)
+- files.c:
+  read_file()
+	- After we've read in a file and possibly converted it from
+	  DOS/Mac format, set fileformat back to 0 to prevent erroneous
+	  conversion messages when we read other files in. (DLR)
+  do_browser()
+  	- Allow '?' to open the help browser, for compatibility with
+  	  Pico.  Also remove some of the Pico compatibility options in
+  	  the file browser that don't work properly for current Pico.
+  	  Backspace, 'l', 'q', and 'u' are invalid.  'd' deletes the
+  	  highlighted file, and 'r' renames the highlighted file;
+  	  neither of these are implemented. (DLR)
+- nano.c:
+  window_init()
+	- If keypad() was TRUE before we pressed Meta-X (as Meta-X
+  	  apparently turns it off under both ncurses and PDCurses), set
+  	  it to TRUE afterwards. (DLR)
+  do_suspend()
+        - Use handle_hupterm() to handle SIGHUP and SIGTERM so we can
+          properly deal with them while nano is suspended. (DLR; problem
+          found by David Benbennick)
+- proto.h:
+	- Surround the do_prev_word() and do_next_word() prototypes with
+	  NANO_SMALL #ifdefs, since the actual functions aren't included
+	  in tiny mode. (DLR)
+- search.c:
+  findnextstr(), do_replace_loop()
+	- Fix potential infinite loops and other misbehavior when doing
+	  beginning-of-line or end-of-line regex replacements ("^", "$",
+	  and "^$").  Add a no_sameline parameter to findnextstr(), and
+	  set it in the calls in do_replace_loop() when such regexes are
+	  found, so that such regexes are only found once per line.
+	  Also change length_change from a long to an int; size_t is
+	  unsuitable due to its being unsigned. (DLR; found by Mike
+	  Frysinger and DLR, match_len by David Benbennick)  David
+	  Benbennick: Add a few minor cleanups to do_replace_loop(), and
+	  fix segfault when doing a regex replace of a string that
+	  matches inside a line (e.g. replace the "b" in "abc" with
+	  anything).
+- winio.c:
+  titlebar()
+	- Fix problem with the available space for a filename on the
+	  titlebar's being short by one. (DLR)
+  do_credits()
+	- Update the copyright years to "1999-2003", to match those
+	  given in the rest of the code. (DLR)
+- nanorc.sample:
+	- Remove duplicate "historylog" entry. (DLR)
+- AUTHORS:
+	- Updated to show 1.2/1.3 maintainers.
+- THANKS:
+	- Added Danilo Segan for the Serbian translation.
+
+- 1.3 tree forks here
+
+GNU nano 1.2.2 - 2003.08.11
 - General:
 	- Translation updates (see po/ChangeLog for details).
 	- Change uncast nrealloc()s assigned to char pointers/arrays to
@@ -25,6 +85,8 @@ CVS code -
 	  added at the bottom of the history (but which was not in the
 	  history) would not be preserved after scrolling down to the
 	  blank bottom entry and then scrolling back up. (DLR)
+	- Fix problem where pressing down,up,down does not blank the
+	  search prompt but keeps the previous search (DLR).
 	- Handle Alt-[-F and H (DLR, fixed home and end not working with
 	  -K in statusbar).  
 - configure.ac:

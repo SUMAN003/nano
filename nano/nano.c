@@ -239,12 +239,16 @@ void window_init(void)
     topwin = newwin(2, COLS, 0, 0);
     bottomwin = newwin(3 - no_help(), COLS, LINES - 3 + no_help(), 0);
 
-#ifdef PDCURSES
     /* Oops, I guess we need this again.  Moved here so the keypad still
-       works after a Meta-X, for example */
-    keypad(edit, TRUE);
-    keypad(bottomwin, TRUE);
+       works after a Meta-X, for example, if we were using it before. */
+    if (!ISSET(ALT_KEYPAD)
+#if !defined(DISABLE_MOUSE) && defined(NCURSES_MOUSE_VERSION)
+	|| ISSET(USE_MOUSE)
 #endif
+	) {
+	keypad(edit, TRUE);
+	keypad(bottomwin, TRUE);
+    }
 }
 
 #if !defined(DISABLE_MOUSE) && defined(NCURSES_MOUSE_VERSION)
@@ -636,7 +640,9 @@ void usage(void)
     print1opt("-F", "--multibuffer", _("Enable multiple file buffers"));
 #endif
 #ifdef ENABLE_NANORC
+#ifndef NANO_SMALL
     print1opt("-H", "--historylog", _("Log & read search/replace string history"));
+#endif
     print1opt("-I", "--ignorercfiles", _("Don't look at nanorc files"));
 #endif
     print1opt("-K", "--keypad", _("Use alternate keypad routines"));
@@ -1619,7 +1625,7 @@ int do_int_spell_fix(const char *word)
     search_last_line = FALSE;
 
     /* We find the first whole-word occurrence of word. */
-    while (findnextstr(TRUE, TRUE, fileage, -1, word))
+    while (findnextstr(TRUE, TRUE, fileage, -1, word, 0))
 	if (is_whole_word(current_x, current->data, word)) {
 	    edit_refresh();
 
@@ -2806,6 +2812,12 @@ RETSIGTYPE do_suspend(int signal)
     /* Restore the terminal settings for the disabled keys */
     tcsetattr(0, TCSANOW, &oldterm);
 
+    /* Trap SIGHUP and SIGTERM so we can properly deal with them while
+       suspended */
+    act.sa_handler = handle_hupterm;
+    sigaction(SIGHUP, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
+
     /* We used to re-enable the default SIG_DFL and raise SIGTSTP, but 
        then we could be (and were) interrupted in the middle of the call.
        So we do it the mutt way instead */
@@ -2817,8 +2829,8 @@ RETSIGTYPE do_cont(int signal)
 {
     /* Now we just update the screen instead of having to reenable the
        SIGTSTP handler. */
-
     doupdate();
+
     /* The Hurd seems to need this, otherwise a ^Y after a ^Z will
 	start suspending again. */
     signal_init();
@@ -3016,7 +3028,9 @@ int main(int argc, char *argv[])
 	{"multibuffer", 0, 0, 'F'},
 #endif
 #ifdef ENABLE_NANORC
+#ifndef NANO_SMALL
 	{"historylog", 0, 0, 'H'},
+#endif
 	{"ignorercfiles", 0, 0, 'I'},
 #endif
 	{"keypad", 0, 0, 'K'},
@@ -3111,9 +3125,11 @@ int main(int argc, char *argv[])
 	    break;
 #endif
 #ifdef ENABLE_NANORC
+#ifndef NANO_SMALL
 	case 'H':
 	    SET(HISTORYLOG);
 	    break;
+#endif
 	case 'I':
 	    SET(NO_RCFILE);
 	    break;
