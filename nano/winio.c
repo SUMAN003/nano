@@ -34,6 +34,12 @@
 static int statblank = 0;	/* Number of keystrokes left after
 				   we call statubar() before we
 				   actually blank the statusbar */
+
+/* Local Function Prototypes for only winio.c */
+inline int get_page_from_virtual(int virtual);
+inline int get_page_start_virtual(int page);
+inline int get_page_end_virtual(int page);
+
 /* Window I/O */
 
 int do_first_line(void)
@@ -66,10 +72,10 @@ int xpt(filestruct * fileptr, int index)
 	tabs++;
 
 	if (fileptr->data[i] == NANO_CONTROL_I) {
-	    if (tabs % 8 == 0);
+	    if (tabs % TABSIZE == 0);
 	    else
-		tabs += 8 - (tabs % 8);
-	} else if (fileptr->data[i] & 0x80)	
+		tabs += TABSIZE - (tabs % TABSIZE);
+	} else if (fileptr->data[i] & 0x80)
 	    /* Make 8 bit chars only 1 collumn! */
 	    ;
 	else if (fileptr->data[i] < 32)
@@ -88,34 +94,37 @@ int xplustabs(void)
 }
 
 
-/* Return what current_x should be, given xplustabs() for the line.
-   Opposite of xplustabs */
-int actual_x(filestruct * fileptr, int xplus)
+/* Return what current_x should be, given xplustabs() for the line, 
+ * given a start position in the filestruct's data */
+int actual_x_from_start(filestruct * fileptr, int xplus, int start)
 {
-    int i, tot = 0;
+    int i, tot = 1;
 
     if (fileptr == NULL || fileptr->data == NULL)
 	return 0;
 
-    for (i = 1; i + tot <= xplus && fileptr->data[i - 1] != 0; i++)
-	if (fileptr->data[i - 1] == NANO_CONTROL_I) {
-	    if ((i + tot) % 8 == 0)
+    for (i = start; tot <= xplus && fileptr->data[i] != 0; i++, tot++)
+	if (fileptr->data[i] == NANO_CONTROL_I) {
+	    if (tot % TABSIZE == 0)
 		tot++;
 	    else
-		tot += 8 - ((i + tot) % 8);
-	} else if (fileptr->data[i - 1] & 0x80)
-	    tot ++;		/* Make 8 bit chars only 1 column (again) */
-	else if (fileptr->data[i - 1] < 32)
+		tot += TABSIZE - (tot % TABSIZE);
+	} else if (fileptr->data[i] & 0x80)
+	    tot++;		/* Make 8 bit chars only 1 column (again) */
+	else if (fileptr->data[i] < 32)
 	    tot += 2;
 
-    if (fileptr->data[i - 1] != 0)
-	i--;			/* Im sure there's a good reason why this is needed for
-				   it to work, I just cant figure out why =-) */
-
 #ifdef DEBUG
-    fprintf(stderr, _("actual_x for xplus=%d returned %d\n"), xplus, i);
+    fprintf(stderr, _("actual_x_from_start for xplus=%d returned %d\n"),
+	    xplus, i);
 #endif
-    return i;
+    return i - start;
+}
+
+/* Opposite of xplustabs */
+inline int actual_x(filestruct * fileptr, int xplus)
+{
+    return actual_x_from_start(fileptr, xplus, 0);
 }
 
 /* a strlen with tabs factored in, similar to xplustabs() */
@@ -130,10 +139,10 @@ int strlenpt(char *buf)
 	tabs++;
 
 	if (buf[i] == NANO_CONTROL_I) {
-	    if (tabs % 8 == 0);
+	    if (tabs % TABSIZE == 0);
 	    else
-		tabs += 8 - (tabs % 8);
-	} else if (buf[i] & 0x80)	
+		tabs += TABSIZE - (tabs % TABSIZE);
+	} else if (buf[i] & 0x80)
 	    /* Make 8 bit chars only 1 collumn! */
 	    ;
 	else if (buf[i] < 32)
@@ -160,9 +169,10 @@ void reset_cursor(void)
 
     x = xplustabs();
     if (x <= COLS - 2)
-	wmove(edit, current_y, x % (COLS - 1));
+	wmove(edit, current_y, x);
     else
-	wmove(edit, current_y, x % (COLS - 7) + 1);
+	wmove(edit, current_y, x -
+	      get_page_start_virtual(get_page_from_virtual(x)));
 
 }
 
@@ -517,54 +527,91 @@ void set_modified(void)
     }
 }
 
-#ifndef NANO_SMALL
-void add_marked_sameline(int begin, int end, filestruct * fileptr, int y)
+inline int get_page_from_virtual(int virtual)
 {
-    int col, actual_col = 0, begin_mapped = 0, end_mapped = 0;
+    int page = 2;
 
-    if (current_x > COLS - 2) {
-	col = (COLS - 7) * (xplustabs() / (COLS - 7)) - 1;
-	actual_col = actual_x(fileptr, col);
-	begin_mapped = begin % (COLS - 7) + 1;
-	end_mapped = end % (COLS - 7) + 1;
-    } else {
-	actual_col = 0;
-	begin_mapped = begin;
-	end_mapped = end;
+    if (virtual <= COLS - 2)
+	return 1;
+    virtual -= (COLS - 2);
+
+    while (virtual > COLS - 2 - 7) {
+	virtual -= (COLS - 2 - 7);
+	page++;
     }
 
-    if (end > (COLS - 2) && ((begin / (COLS - 7)) != (end / (COLS - 7)))) {
-	if (current_x == begin) {
-	    mvwaddnstr(edit, y, 0, &fileptr->data[actual_col],
-		       begin_mapped);
-	    wattron(edit, A_REVERSE);
-	    waddnstr(edit, &fileptr->data[begin], COLS - begin_mapped);
-	    wattroff(edit, A_REVERSE);
-	} else {
-	    wattron(edit, A_REVERSE);
-	    mvwaddnstr(edit, y, 0, &fileptr->data[actual_col], end_mapped);
-	    wattroff(edit, A_REVERSE);
-	    waddnstr(edit, &fileptr->data[end], COLS - end_mapped);
-	}
-    } else {
-	mvwaddnstr(edit, y, 0, &fileptr->data[actual_col], begin_mapped);
-	wattron(edit, A_REVERSE);
-	waddnstr(edit, &fileptr->data[begin], end_mapped - begin_mapped);
-	wattroff(edit, A_REVERSE);
-	waddnstr(edit, &fileptr->data[end],
-		 COLS - (end_mapped - begin_mapped));
-    }
+    return page;
+}
+
+inline int get_page_start_virtual(int page)
+{
+    int virtual;
+    virtual = --page * (COLS - 7);
+    if (page)
+	virtual -= 2 * page - 1;
+    return virtual;
+}
+
+inline int get_page_end_virtual(int page)
+{
+    return get_page_start_virtual(page) + COLS - 1;
+}
+
+#ifndef NANO_SMALL
+/* Called only from edit_add, and therefore expects a
+ * converted-to-only-spaces line */
+void add_marked_sameline(int begin, int end, filestruct * fileptr, int y,
+			 int virt_cur_x, int this_page)
+{
+    int this_page_start = get_page_start_virtual(this_page),
+	this_page_end = get_page_end_virtual(this_page);
+
+    /* 3 start points: 0 -> begin, begin->end, end->strlen(data) */
+    /*    in data    :    pre          sel           post        */
+    /* likewise, 3 data lengths */
+    int pre_data_len = begin, sel_data_len = end - begin, post_data_len = 0;	/* Determined from the other two */
+
+    /* now fix the start locations & lengths according to the cursor's 
+     * position (ie: our page) */
+    if (pre_data_len < this_page_start)
+	pre_data_len = 0;
+    else
+	pre_data_len -= this_page_start;
+
+    if (begin < this_page_start)
+	begin = this_page_start;
+
+    if (end < this_page_start)
+	end = this_page_start;
+
+    /* we don't care about end, because it will just get cropped
+     * due to length */
+    if (begin > this_page_end)
+	begin = this_page_end;
+
+    if (end > this_page_end)
+	end = this_page_end;
+
+    sel_data_len = end - begin;
+    post_data_len = this_page_end - end;
+
+    mvwaddnstr(edit, y, 0, &fileptr->data[this_page_start], pre_data_len);
+    wattron(edit, A_REVERSE);
+    mvwaddnstr(edit, y, begin - this_page_start,
+	       &fileptr->data[begin], sel_data_len);
+    wattroff(edit, A_REVERSE);
+    mvwaddnstr(edit, y, end - this_page_start,
+	       &fileptr->data[end], post_data_len);
 }
 #endif
 
-void edit_add(filestruct * fileptr, int yval, int xval, int start)
+/* Called only from update_line.  Expects a converted-to-not-have-tabs
+ * line */
+void edit_add(filestruct * fileptr, int yval, int start, int virt_cur_x,
+	      int virt_mark_beginx, int this_page)
 {
 #ifndef NANO_SMALL
-    int col;
-
     if (ISSET(MARK_ISSET)) {
-
-	/* Our horribly ugly marker code, which needs to be rewritten too :P */
 	if ((fileptr->lineno > mark_beginbuf->lineno
 	     && fileptr->lineno > current->lineno)
 	    || (fileptr->lineno < mark_beginbuf->lineno
@@ -572,93 +619,91 @@ void edit_add(filestruct * fileptr, int yval, int xval, int start)
 
 	    /* We're on a normal, unselected line */
 	    mvwaddnstr(edit, yval, 0, fileptr->data, COLS);
-
-	    if (strlenpt(fileptr->data) > COLS)
-		mvwaddch(edit, yval, COLS - 1, '$');
 	} else {
-
-	    /* We're on selected text */
 	    if (fileptr != mark_beginbuf && fileptr != current) {
+		/* We're on selected text */
 		wattron(edit, A_REVERSE);
 		mvwaddnstr(edit, yval, 0, fileptr->data, COLS);
-		if (strlenpt(fileptr->data) > COLS)
-		    mvwaddch(edit, yval, COLS - 1, '$');
-
 		wattroff(edit, A_REVERSE);
-	    }
-	    /* Special case, we're still on the same line we started marking */
-	    else if (fileptr == mark_beginbuf && fileptr == current) {
-		if (current_x < mark_beginx) {
-		    add_marked_sameline(current_x, mark_beginx, fileptr,
-					yval);
-		} else {
-		    add_marked_sameline(mark_beginx, current_x, fileptr,
-					yval);
-		}
-
+	    } else if (fileptr == mark_beginbuf && fileptr == current) {
+		/* Special case, we're still on the same line we started
+		 * marking */
+		if (virt_cur_x < virt_mark_beginx)
+		    add_marked_sameline(virt_cur_x, virt_mark_beginx,
+					fileptr, yval, virt_cur_x,
+					this_page);
+		else
+		    add_marked_sameline(virt_mark_beginx, virt_cur_x,
+					fileptr, yval, virt_cur_x,
+					this_page);
 	    } else if (fileptr == mark_beginbuf) {
+		/* we're updating the line that was first marked */
+		int target;
+
 		if (mark_beginbuf->lineno > current->lineno)
 		    wattron(edit, A_REVERSE);
 
-		mvwaddnstr(edit, yval, 0, fileptr->data, mark_beginx);
+		target =
+		    (virt_mark_beginx <
+		     COLS - 1) ? virt_mark_beginx : COLS - 1;
+
+		mvwaddnstr(edit, yval, 0, fileptr->data, target);
 
 		if (mark_beginbuf->lineno < current->lineno)
 		    wattron(edit, A_REVERSE);
 		else
 		    wattroff(edit, A_REVERSE);
 
-		waddnstr(edit, &fileptr->data[mark_beginx],
-			 COLS - xpt(fileptr, mark_beginx));
+		target = (COLS - 1) - virt_mark_beginx;
+		if (target < 0)
+		    target = 0;
 
-		if (strlenpt(fileptr->data) > COLS)
-		    mvwaddch(edit, yval, COLS - 1, '$');
+		mvwaddnstr(edit, yval, virt_mark_beginx,
+			   &fileptr->data[virt_mark_beginx], target);
 
 		if (mark_beginbuf->lineno < current->lineno)
 		    wattroff(edit, A_REVERSE);
 
 	    } else if (fileptr == current) {
+		/* we're on the cursors line, but it's not the first
+		 * one we marked... */
+		int this_page_start = get_page_start_virtual(this_page),
+		    this_page_end = get_page_end_virtual(this_page);
+
 		if (mark_beginbuf->lineno < current->lineno)
 		    wattron(edit, A_REVERSE);
 
-		/* Thank GOD for waddnstr, this can now be much cleaner */
-		if (xplustabs() > COLS - 2) {
-		    col = (COLS - 7) * (xplustabs() / (COLS - 7));
-		    mvwaddnstr(edit, yval, 1,
-			       &fileptr->data[actual_x(current, col)],
-			       current_x % (COLS - 7) + 1);
-		} else
-		    mvwaddnstr(edit, yval, 0, fileptr->data, current_x);
+		if (virt_cur_x > COLS - 2) {
+		    mvwaddnstr(edit, yval, 0,
+			       &fileptr->data[this_page_start],
+			       virt_cur_x - this_page_start);
+		} else {
+		    mvwaddnstr(edit, yval, 0, fileptr->data, virt_cur_x);
+		}
 
 		if (mark_beginbuf->lineno > current->lineno)
 		    wattron(edit, A_REVERSE);
 		else
 		    wattroff(edit, A_REVERSE);
 
-
-		if (xplustabs() > COLS - 2) {
-		    mvwaddnstr(edit, yval,
-			       xpt(current,
-				   (current_x % (COLS - 7) + 1)),
-			       &fileptr->data[current_x],
-			       COLS - current_x);
-		} else
-		    mvwaddnstr(edit, yval, xplustabs(),
-			       &fileptr->data[current_x],
-			       COLS - current_x);
-
-		if (strlenpt(fileptr->data) > COLS)
-		    mvwaddch(edit, yval, COLS - 1, '$');
+		if (virt_cur_x > COLS - 2)
+		    mvwaddnstr(edit, yval, virt_cur_x - this_page_start,
+			       &fileptr->data[virt_cur_x],
+			       this_page_end - virt_cur_x);
+		else
+		    mvwaddnstr(edit, yval, virt_cur_x,
+			       &fileptr->data[virt_cur_x],
+			       COLS - virt_cur_x);
 
 		if (mark_beginbuf->lineno > current->lineno)
 		    wattroff(edit, A_REVERSE);
-
 	    }
 	}
 
     } else
 #endif
-	mvwaddnstr(edit, yval, xval, &fileptr->data[start], COLS - xval);
-
+	mvwaddnstr(edit, yval, 0, &fileptr->data[start],
+		   get_page_end_virtual(this_page) - start);
 }
 
 /*
@@ -670,28 +715,75 @@ void edit_add(filestruct * fileptr, int yval, int xval, int start)
 void update_line(filestruct * fileptr, int index)
 {
     filestruct *filetmp;
-    int line = 0, col = 0, actual_col = 0, x;
+    int line = 0, col = 0;
+    int virt_cur_x = current_x, virt_mark_beginx = mark_beginx;
+    char *realdata, *tmp;
+    int i, pos, len, page;
 
+    if (!fileptr)
+	return;
+
+    /* First, blank out the line (at a minimum) */
     for (filetmp = edittop; filetmp != fileptr && filetmp != editbot;
 	 filetmp = filetmp->next)
 	line++;
 
     mvwaddstr(edit, line, 0, hblank);
 
-    if (current == fileptr && (x = xpt(current, index)) > COLS - 2) {
+    /* Next, convert all the tabs to spaces so everything else is easy */
+    index = xpt(fileptr, index);
 
-	col = (COLS - 7) * (x / (COLS - 7));
-	actual_col = actual_x(filetmp, col);
+    realdata = fileptr->data;
+    len = strlen(realdata);
+    fileptr->data = nmalloc(xpt(fileptr, len) + 1);
 
-	edit_add(filetmp, line, 1, actual_col);
+    pos = 0;
+    for (i = 0; i < len; i++) {
+	if (realdata[i] == '\t') {
+	    do {
+		fileptr->data[pos++] = ' ';
+		if (i < current_x)
+		    virt_cur_x++;
+		if (i < mark_beginx)
+		    virt_mark_beginx++;
+	    } while (pos % TABSIZE);
+	    /* must decrement once to account for tab-is-one-character */
+	    if (i < current_x)
+		virt_cur_x--;
+	    if (i < mark_beginx)
+		virt_mark_beginx--;
+	} else {
+	    fileptr->data[pos++] = realdata[i];
+	}
+    }
+
+    fileptr->data[pos] = '\0';
+
+    /* Now, Paint the line */
+    if (current == fileptr && index > COLS - 2) {
+	/* This handles when the current line is beyond COLS */
+	/* It requires figureing out what page we're at      */
+	page = get_page_from_virtual(index);
+	col = get_page_start_virtual(page);
+
+	edit_add(filetmp, line, col, virt_cur_x, virt_mark_beginx, page);
 	mvwaddch(edit, line, 0, '$');
 
-    } else
-	edit_add(filetmp, line, 0, 0);
+	if (strlenpt(fileptr->data) > get_page_end_virtual(page))
+	    mvwaddch(edit, line, COLS - 1, '$');
+    } else {
+	/* It's not the current line means that it's at x=0 and page=1 */
+	/* If it is the current line, then we're in the same boat      */
+	edit_add(filetmp, line, 0, virt_cur_x, virt_mark_beginx, 1);
 
-    if (strlenpt(&filetmp->data[actual_col]) > COLS)
-	mvwaddch(edit, line, COLS - 1, '$');
+	if (strlenpt(&filetmp->data[col]) > COLS)
+	    mvwaddch(edit, line, COLS - 1, '$');
+    }
 
+    /* Clean up our mess */
+    tmp = fileptr->data;
+    fileptr->data = realdata;
+    free(tmp);
 }
 
 void center_cursor(void)
@@ -967,7 +1059,6 @@ void display_main_list(void)
 
 int total_refresh(void)
 {
-    display_main_list();
     clearok(edit, TRUE);
     clearok(topwin, TRUE);
     clearok(bottomwin, TRUE);
@@ -997,8 +1088,9 @@ int do_cursorpos(void)
     if (current == NULL || fileage == NULL)
 	return 0;
 
-    for (fileptr = fileage; fileptr != current && fileptr != NULL; fileptr = fileptr->next)
-    	tot += strlen(fileptr->data) + 1;
+    for (fileptr = fileage; fileptr != current && fileptr != NULL;
+	 fileptr = fileptr->next)
+	tot += strlen(fileptr->data) + 1;
 
     if (fileptr == NULL)
 	return -1;
@@ -1006,12 +1098,7 @@ int do_cursorpos(void)
     i = tot + current_x;;
 
     for (fileptr = current->next; fileptr != NULL; fileptr = fileptr->next)
-    	tot += strlen(fileptr->data) + 1;
-
-    /* FIXME - This is gardly elegant */
-/*    if (current == fileage && strlen(current->data) == 0)
-	i = 0;
-*/
+	tot += strlen(fileptr->data) + 1;
 
     if (totlines > 0)
 	linepct = 100 * current->lineno / totlines;
@@ -1050,15 +1137,14 @@ int do_help(void)
     if (ISSET(NO_HELP)) {
 
 	no_help_flag = 1;
-        delwin (bottomwin);
-        bottomwin = newwin(3, COLS, LINES - 3, 0);
+	delwin(bottomwin);
+	bottomwin = newwin(3, COLS, LINES - 3, 0);
 	keypad(bottomwin, TRUE);
-        
-	editwinrows -= no_help ();
-        UNSET(NO_HELP);
+
+	editwinrows -= no_help();
+	UNSET(NO_HELP);
 	bottombars(help_list, HELP_LIST_LEN);
-    }
-    else
+    } else
 	bottombars(help_list, HELP_LIST_LEN);
 
     do {
@@ -1128,14 +1214,13 @@ int do_help(void)
 
     if (no_help_flag) {
 	werase(bottomwin);
-        wrefresh(bottomwin);
-	delwin (bottomwin);
+	wrefresh(bottomwin);
+	delwin(bottomwin);
 	SET(NO_HELP);
 	bottomwin = newwin(3 - no_help(), COLS, LINES - 3 + no_help(), 0);
 	keypad(bottomwin, TRUE);
 	editwinrows += no_help();
-    }
-    else
+    } else
 	display_main_list();
 
     curs_set(1);

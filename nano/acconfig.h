@@ -21,3 +21,6 @@
 
 /* Define to use the slang wrappers for curses instead of native curses */
 #undef USE_SLANG
+
+/* Define this if you have a behaving TABSIZE global in your curses lib */
+#undef HAVE_TABSIZE

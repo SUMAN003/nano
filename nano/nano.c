@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <locale.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "config.h"
 #include "proto.h"
@@ -62,8 +63,6 @@ char *last_replace;		/* Last replacement string */
 int temp_opt = 0;		/* Editing temp file (pico -t option) */
 int fill = 0;			/* Fill - where to wrap lines, basically */
 static char *alt_speller;	/* Alternative spell command */
-static int editwineob = 0;	/* Last Line in edit buffer
-				   (0 - editwineob) */
 struct termios oldterm;		/* The user's original term settings */
 static char *alt_speller;	/* Alternative spell command */
 static char *help_text_init = "";
@@ -75,15 +74,14 @@ RETSIGTYPE finish(int sigage)
     if (!ISSET(NO_HELP)) {
 	mvwaddstr(bottomwin, 1, 0, hblank);
 	mvwaddstr(bottomwin, 2, 0, hblank);
-    }
-    else
+    } else
 	mvwaddstr(bottomwin, 0, 0, hblank);
 
     wrefresh(bottomwin);
     endwin();
 
     /* Restore the old term settings */
-    tcsetattr (0, TCSANOW, &oldterm);
+    tcsetattr(0, TCSANOW, &oldterm);
 
     exit(sigage);
 }
@@ -103,7 +101,7 @@ void die(char *msg, ...)
     write_file("nano.save", 0);
 
     /* Restore the old term settings */
-    tcsetattr (0, TCSANOW, &oldterm);
+    tcsetattr(0, TCSANOW, &oldterm);
 
     clear();
     refresh();
@@ -114,29 +112,6 @@ void die(char *msg, ...)
     fprintf(stderr, _("\nBuffer written to 'nano.save'\n"));
 
     exit(1);			/* We have a problem: exit w/ errorlevel(1) */
-}
-
-/* Thanks BG, many ppl have been asking for this... */
-void *nmalloc(size_t howmuch)
-{
-    void *r;
-
-    /* Panic save? */
-
-    if (!(r = malloc(howmuch)))
-	die(_("nano: malloc: out of memory!"));
-
-    return r;
-}
-
-void *nrealloc(void *ptr, size_t howmuch)
-{
-    void *r;
-
-    if (!(r = realloc(ptr, howmuch)))
-	die("nano: realloc: out of memory!");
-
-    return r;
 }
 
 void print_view_warning(void)
@@ -154,7 +129,6 @@ void global_init(void)
     current_x = 0;
     current_y = 0;
     editwinrows = LINES - 5 + no_help();
-    editwineob = editwinrows - 1;
     fileage = NULL;
     cutbuffer = NULL;
     current = NULL;
@@ -182,21 +156,21 @@ void init_help_msg(void)
 #ifndef NANO_SMALL
 
     help_text_init =
-    _(" nano help text\n\n "
-    "The nano editor is designed to emulate the functionality and "
-    "ease-of-use of the UW Pico text editor.  There are four main "
-    "sections of the editor: The top line shows the program "
-    "version, the current filename being edited, and whether "
-    "or not the file has been modified.  Next is the main editor "
-    "window showing the file being edited.  The status line is "
-    "the third line from the bottom and shows important messages. "
-    "The bottom two lines show the most commonly used shortcuts "
-    "in the editor.\n\n "
-    "The notation for shortcuts is as follows: Control-key "
-    "sequences are notated with a caret (^) symbol.  Alt-key "
-    "sequences are notated with an at (@) symbol.  The following "
-    "keystrokes are available in the main editor window. "
-    "Optional keys are shown in parentheses:\n\n");
+	_(" nano help text\n\n "
+	  "The nano editor is designed to emulate the functionality and "
+	  "ease-of-use of the UW Pico text editor.  There are four main "
+	  "sections of the editor: The top line shows the program "
+	  "version, the current filename being edited, and whether "
+	  "or not the file has been modified.  Next is the main editor "
+	  "window showing the file being edited.  The status line is "
+	  "the third line from the bottom and shows important messages. "
+	  "The bottom two lines show the most commonly used shortcuts "
+	  "in the editor.\n\n "
+	  "The notation for shortcuts is as follows: Control-key "
+	  "sequences are notated with a caret (^) symbol.  Alt-key "
+	  "sequences are notated with an at (@) symbol.  The following "
+	  "keystrokes are available in the main editor window. "
+	  "Optional keys are shown in parentheses:\n\n");
 #endif
 
 }
@@ -330,231 +304,15 @@ void align(char **strp)
     *strp = nrealloc(*strp, strlen(*strp) + 1);
 }
 
-/* Load file into edit buffer - takes data from file struct */
-void load_file(void)
-{
-    current = fileage;
-    wmove(edit, current_y, current_x);
-}
-
-/* What happens when there is no file to open? aiee! */
-void new_file(void)
-{
-    fileage = nmalloc(sizeof(filestruct));
-    fileage->data = nmalloc(1);
-    strcpy(fileage->data, "");
-    fileage->prev = NULL;
-    fileage->next = NULL;
-    fileage->lineno = 1;
-    filebot = fileage;
-    edittop = fileage;
-    editbot = fileage;
-    current = fileage;
-    totlines = 1;
-    UNSET(VIEW_MODE);
-}
-
-
-int read_byte(int fd, char *filename, char *input)
-{
-    static char buf[BUFSIZ];
-    static int index = 0;
-    static int size = 0;
-
-    if (index == size) {
-	index = 0;
-	size = read(fd, buf, BUFSIZ);
-	if (size == -1) {
-	    clear();
-	    refresh();
-	    resetty();
-	    endwin();
-	    perror(filename);
-	}
-	if (!size)
-	    return 0;
-    }
-    *input = buf[index++];
-    return 1;
-}
-
-filestruct *read_line(char *buf, filestruct * prev, int *line1ins)
-{
-    filestruct *fileptr;
-
-    fileptr = nmalloc(sizeof(filestruct));
-    fileptr->data = nmalloc(strlen(buf) + 2);
-    strcpy(fileptr->data, buf);
-
-    if (*line1ins) {
-	/* Special case, insert with cursor on 1st line. */
-	fileptr->prev = NULL;
-	fileptr->next = fileage;
-	fileptr->lineno = 1;
-	*line1ins = 0;
-	fileage = fileptr;
-    } else if (fileage == NULL) {
-	fileage = fileptr;
-	fileage->lineno = 1;
-	fileage->next = fileage->prev = NULL;
-	fileptr = filebot = fileage;
-    } else if (prev) {
-	fileptr->prev = prev;
-	fileptr->next = NULL;
-	fileptr->lineno = prev->lineno + 1;
-	prev->next = fileptr;
-    } else {
-	die(_("read_line: not on first line and prev is NULL"));
-    }
-
-    return fileptr;
-}
-
-
-int read_file(int fd, char *filename)
-{
-    long size, lines = 0, linetemp = 0;
-    char input[2];		/* buffer */
-    char *buf;
-    long i = 0, bufx = 128;
-    filestruct *fileptr = current, *tmp = NULL;
-    int line1ins = 0;
-
-    buf = nmalloc(bufx);
-
-    if (fileptr != NULL && fileptr->prev != NULL) {
-	fileptr = fileptr->prev;
-	tmp = fileptr;
-    } else if (fileptr != NULL && fileptr->prev == NULL) {
-	tmp = fileage;
-	current = fileage;
-	line1ins = 1;
-    }
-    input[1] = 0;
-    /* Read the entire file into file struct */
-    while ((size = read_byte(fd, filename, input)) > 0) {
-	linetemp = 0;
-	if (input[0] == '\n') {
-	    fileptr = read_line(buf, fileptr, &line1ins);
-	    lines++;
-	    buf[0] = 0;
-	    i = 0;
-	} else {
-	    /* Now we allocate a bigger buffer 128 characters at a time.
-	       If we allocate a lot of space for one line, we may indeed 
-	       have to use a buffer this big later on, so we don't
-	       decrease it at all.  We do free it at the end though. */
-
-	    if (i >= bufx - 1) {
-		buf = nrealloc(buf, bufx + 128);
-		bufx += 128;
-	    }
-	    buf[i] = input[0];
-	    buf[i + 1] = 0;
-	    i++;
-	}
-	totsize += size;
-    }
-
-    /* Did we not get a newline but still have stuff to do? */
-    if (buf[0]) {
-	fileptr = read_line(buf, fileptr, &line1ins);
-	lines++;
-	buf[0] = 0;
-    }
-    /* Did we even GET a file? */
-    if (totsize == 0) {
-	new_file();
-	statusbar(_("Read %d lines"), lines);
-	return 1;
-    }
-    if (current != NULL) {
-	fileptr->next = current;
-	current->prev = fileptr;
-	renumber(current);
-	current_x = 0;
-	placewewant = 0;
-	edit_update(fileptr);
-    } else if (fileptr->next == NULL) {
-	filebot = fileptr;
-	load_file();
-    }
-    statusbar(_("Read %d lines"), lines);
-    totlines += lines;
-
-    free(buf);
-    close(fd);
-
-    return 1;
-}
-
-/* Open the file (and decide if it exists) */
-int open_file(char *filename, int insert, int quiet)
-{
-    int fd;
-    struct stat fileinfo;
-
-    if (!strcmp(filename, "") || stat(filename, &fileinfo) == -1) {
-	if (insert) {
-	    if (!quiet)
-		statusbar(_("\"%s\" not found"), filename);
-	    return -1;
-	} else {
-	    /* We have a new file */
-	    statusbar(_("New File"));
-	    new_file();
-	}
-    } else if ((fd = open(filename, O_RDONLY)) == -1) {
-	if (!quiet)
-	    statusbar("%s: %s", strerror(errno), filename);
-	return -1;
-    } else {			/* File is A-OK */
-	if (S_ISDIR(fileinfo.st_mode)) {
-	    statusbar(_("File \"%s\" is a directory"), filename);
-	    new_file();
-	    return -1;
-	}
-	if (!quiet)
-	    statusbar(_("Reading File"));
-	read_file(fd, filename);
-    }
-
-    return 1;
-}
-
-int do_insertfile(void)
-{
-    int i;
-
-    wrap_reset();
-    i = statusq(writefile_list, WRITEFILE_LIST_LEN, "",
-		_("File to insert [from ./] "));
-    if (i != -1) {
-
-#ifdef DEBUG
-	fprintf(stderr, "filename is %s", answer);
-#endif
-
-	i = open_file(answer, 1, 0);
-
-	dump_buffer(fileage);
-	set_modified();
-	UNSET(KEEP_CUTBUFFER);
-	display_main_list();
-	return i;
-    } else {
-	statusbar(_("Cancelled"));
-	UNSET(KEEP_CUTBUFFER);
-	display_main_list();
-	return 0;
-    }
-}
-
 void usage(void)
 {
 #ifdef HAVE_GETOPT_LONG
     printf(_("Usage: nano [GNU long option] [option] +LINE <file>\n\n"));
     printf(_("Option		Long option		Meaning\n"));
+#ifdef HAVE_TABSIZE
+    printf(_
+	   (" -T 		--tabsize=[num]		Set width of a tab to num\n"));
+#endif
     printf
 	(_
 	 (" -V 		--version		Print version information and exit\n"));
@@ -593,6 +351,9 @@ void usage(void)
 #else
     printf(_("Usage: nano [option] +LINE <file>\n\n"));
     printf(_("Option		Meaning\n"));
+#ifdef HAVE_TABSIZE
+    printf(_(" -T [num]	Set width of a tab to num\n"));
+#endif
     printf(_(" -V 		Print version information and exit\n"));
     printf(_(" -c 		Constantly show cursor position\n"));
     printf(_(" -h 		Show this message\n"));
@@ -623,65 +384,6 @@ void version(void)
     printf(_(" nano version %s by Chris Allegretta (compiled %s, %s)\n"),
 	   VERSION, __TIME__, __DATE__);
     printf(_(" Email: nano@asty.org	Web: http://www.asty.org/nano\n"));
-}
-
-void page_down_center(void)
-{
-    if (editbot->next != NULL && editbot->next != filebot) {
-	edit_update(editbot->next);
-	center_cursor();
-    } else if (editbot != filebot) {
-	edit_update(editbot);
-	center_cursor();
-    } else {
-	while (current != filebot)
-	    current = current->next;
-	edit_update(current);
-    }
-    update_cursor();
-
-}
-
-int page_down(void)
-{
-    wrap_reset();
-    current_x = 0;
-    placewewant = 0;
-
-    if (current == filebot)
-	return 0;
-
-    if (editbot != filebot) {
-	current_y = 0;
-	current = editbot;
-    } else
-	while (current != filebot) {
-	    current = current->next;
-	    current_y++;
-	}
-
-    edit_update_top(current);
-    update_cursor();
-    UNSET(KEEP_CUTBUFFER);
-    check_statblank();
-    return 1;
-}
-
-int do_home(void)
-{
-    current_x = 0;
-    placewewant = 0;
-    update_line(current, current_x);
-    return 1;
-}
-
-int do_end(void)
-{
-    current_x = strlen(current->data);
-    placewewant = xplustabs();
-    update_line(current, current_x);
-
-    return 1;
 }
 
 filestruct *make_new_node(filestruct * prevnode)
@@ -736,109 +438,6 @@ void nano_small_msg(void)
     statusbar("Sorry, this function not available with nano-tiny option");
 }
 
-/* What happens when we want to go past the bottom of the buffer */
-int do_down(void)
-{
-    wrap_reset();
-    if (current->next != NULL) {
-	update_line(current->prev, 0);
-
-	if (placewewant > 0)
-	    current_x = actual_x(current->next, placewewant);
-
-	if (current_x > strlen(current->next->data))
-	    current_x = strlen(current->next->data);
-    } else {
-	UNSET(KEEP_CUTBUFFER);
-	check_statblank();
-	return 0;
-    }
- 
-   if (current_y < editwineob && current != editbot)
-	current_y++;
-    else
-	page_down_center();
-
-    update_cursor();
-    update_line(current->prev, 0);
-    update_line(current, current_x);
-    UNSET(KEEP_CUTBUFFER);
-    check_statblank();
-    return 1;
-}
-
-void page_up_center(void)
-{
-    if (edittop != fileage) {
-	edit_update(edittop);
-	center_cursor();
-    } else
-	current_y = 0;
-
-    update_cursor();
-
-}
-
-int do_up(void)
-{
-    wrap_reset();
-    if (current->prev != NULL) {
-	update_line(current, 0);
-
-	if (placewewant > 0)
-	    current_x = actual_x(current->prev, placewewant);
-
-	if (current_x > strlen(current->prev->data))
-	    current_x = strlen(current->prev->data);
-    }
-    if (current_y > 0)
-	current_y--;
-    else
-	page_up_center();
-
-    update_cursor();
-    update_line(current->next, 0);
-    update_line(current, current_x);
-    UNSET(KEEP_CUTBUFFER);
-    check_statblank();
-    return 1;
-}
-
-int do_right(void)
-{
-    if (current_x < strlen(current->data)) {
-	current_x++;
-    } else {
-	if (do_down())
-	    current_x = 0;
-    }
-
-    placewewant = xplustabs();
-    update_cursor();
-    update_line(current, current_x);
-    UNSET(KEEP_CUTBUFFER);
-    check_statblank();
-    return 1;
-}
-
-int do_left(void)
-{
-    if (current_x > 0)
-	current_x--;
-    else if (current != fileage) {
-	placewewant = 0;
-	current_x = strlen(current->prev->data);
-	do_up();
-    }
-    placewewant = xplustabs();
-
-    update_cursor();
-    update_line(current, current_x);
-    UNSET(KEEP_CUTBUFFER);
-    check_statblank();
-    return 1;
-}
-
 /* The user typed a printable character; add it to the edit buffer */
 void do_char(char ch)
 {
@@ -850,8 +449,8 @@ void do_char(char ch)
     current->data[current_x] = ch;
     do_right();
 
-    if (!ISSET(NO_WRAP))
-	check_wrap(current);
+    if (!ISSET(NO_WRAP) && (ch != '\t'))
+	check_wrap(current, ch);
     set_modified();
     check_statblank();
     UNSET(KEEP_CUTBUFFER);
@@ -917,6 +516,7 @@ int do_enter(filestruct * inptr)
 
     update_cursor();
     edit_refresh();
+    placewewant = xplustabs();
     return 1;
 }
 
@@ -965,98 +565,318 @@ void do_next_word(void)
 
 }
 
-/* Actually wrap a line, called by check_wrap() */
-void do_wrap(filestruct * inptr)
+void do_wrap(filestruct * inptr, char input_char)
 {
-    int i, j, chop;
-    char *tmp, *foo;
+    int i = 0;			/* Index into ->data for line. */
+    int i_tabs = 0;		/* Screen position of ->data[i]. */
+    int last_word_end = -1;	/* Location of end of last word found. */
+    int current_word_start = -1;	/* Location of start of current word. */
+    int current_word_start_t = -1;	/* Location of start of current word screen position. */
+    int current_word_end = -1;	/* Location of end   of current word */
+    int current_word_end_t = -1;	/* Location of end   of current word screen position. */
+    int len = strlen(inptr->data);
 
-    i = actual_x(inptr, fill);
+    int down = 0;
+    int right = 0;
+    struct filestruct *temp = NULL;
 
-    while (inptr->data[i] != ' ' && inptr->data[i] != '\t' && i != 0)
-	i--;
+    assert(strlenpt(inptr->data) > fill);
 
-    if (i == 0)
-	return;
+    for (i = 0, i_tabs = 0; i < len; i++, i_tabs++) {
+	if (!isspace(inptr->data[i])) {
+	    last_word_end = current_word_end;
 
-    while ((inptr->data[i] == ' ' || inptr->data[i] == '\t') && i != 0)
-	i--;
+	    current_word_start = i;
+	    current_word_start_t = i_tabs;
 
-    if (i == 0)
-	return;
+	    while (!isspace(inptr->data[i]) && inptr->data[i]) {
+		i++;
+		i_tabs++;
+		if (inptr->data[i] < 32)
+		    i_tabs++;
+	    }
 
-    /* NB: This sucks */
-    if (inptr->data[i] != 0)
-	i++;
-    if (inptr->data[i] != 0)
-	i++;
-
-    chop = i;
-    while ((inptr->data[i] == ' ' || inptr->data[i] == '\t') &&
-	inptr->data[i] != 0)
-        i++;
-
-    if (inptr->data[i] == 0)
-	return;
-
-    if (ISSET(SAMELINEWRAP)) {
-	tmp = &current->data[i];
-	foo = nmalloc(strlen(tmp) + strlen(current->next->data) + 1);
-	strcpy(foo, tmp);
-	strcpy(&foo[strlen(tmp)], current->next->data);
-	free(current->next->data);
-	current->next->data = foo;
-	*tmp = 0;
-	current->data[chop] = 0;
-	align(&current->data);
-
-	if (current_x >= i) {
-	    current_x = current_x - i;
-	    current = current->next;
+	    if (inptr->data[i]) {
+		current_word_end = i;
+		current_word_end_t = i_tabs;
+	    } else {
+		current_word_end = i - 1;
+		current_word_end_t = i_tabs - 1;
+	    }
 	}
-	if (current->next == NULL) {
-	    current->next = make_new_node(current);
-	    current->next->data = nmalloc(1);
-	    current->next->data[0] = 0;
-	    filebot = current->next;
+
+	if (inptr->data[i] == NANO_CONTROL_I) {
+	    if (i_tabs % TABSIZE != 0);
+	    i_tabs += TABSIZE - (i_tabs % TABSIZE);
 	}
-	align(&current->next->data);
 
-	edit_refresh();
-    } else {
+	if (current_word_end_t > fill)
+	    break;
+    }
 
-	j = current_x;
-	current_x = i;
-	do_enter(current);
+    assert(current_word_end_t > fill);
 
-	current->prev->data[chop] = 0;
-	align(&current->prev->data);
+    /* There are a few (ever changing) cases of what the line could look like.
+     * 1) only one word on the line before wrap point.
+     *    a) one word takes up the whole line with no starting spaces.
+     *         - do nothing and return.
+     *    b) cursor is on word or before word at wrap point and there are spaces at beginning.
+     *         - word starts new line.
+     *         - keep white space on original line up to the cursor.
+     *    *) cursor is after word at wrap point
+     *         - either it's all white space after word, and this routine isn't called.
+     *         - or we are actually in case 2 (2 words).
+     * 2) Two or more words on the line before wrap point.
+     *    a) cursor is at a word or space before wrap point
+     *         - word at wrap point starts a new line.
+     *         - white space at end of original line is cleared, unless
+     *           it is all spaces between previous word and next word which appears after fill.
+     *    b) cursor is at the word at the wrap point.
+     *         - word at wrap point starts a new line.
+     *         1. pressed a space and at first character of wrap point word.
+     *            - white space on original line is kept to where cursor was.
+     *         2. pressed non space (or space elsewhere).
+     *            - white space at end of original line is cleared.
+     *    c) cursor is past the word at the wrap point.
+     *         - word at wrap point starts a new line.
+     *            - white space at end of original line is cleared
+     */
 
-	if (j > i) {
-	    current_x = j - i;
-	    UNSET(SAMELINEWRAP);
-	} else {
-	    current_x = j;
-	    current = current->prev;
-	    SET(SAMELINEWRAP);
+    temp = nmalloc(sizeof(filestruct));
+
+    /* Category 1a: one word taking up the whole line with no beginning spaces. */
+    if ((last_word_end == -1) && (!isspace(inptr->data[0]))) {
+	for (i = current_word_end; i < len; i++) {
+	    if (!isspace(inptr->data[i]) && i < len) {
+		current_word_start = i;
+		while (!isspace(inptr->data[i]) && (i < len)) {
+		    i++;
+		}
+		last_word_end = current_word_end;
+		current_word_end = i;
+		break;
+	    }
+	}
+
+	if (last_word_end == -1) {
+	    free(temp);
+	    return;
+	}
+	if (current_x >= last_word_end) {
+	    right = (current_x - current_word_start) + 1;
+	    current_x = last_word_end;
+	    down = 1;
+	}
+
+	temp->data = nmalloc(strlen(&inptr->data[current_word_start]) + 1);
+	strcpy(temp->data, &inptr->data[current_word_start]);
+	inptr->data = nrealloc(inptr->data, last_word_end + 2);
+	inptr->data[last_word_end + 1] = 0;
+    } else
+	/* Category 1b: one word on the line and word not taking up whole line
+	   (i.e. there are spaces at the beginning of the line) */
+    if (last_word_end == -1) {
+	temp->data = nmalloc(strlen(&inptr->data[current_word_start]) + 1);
+	strcpy(temp->data, &inptr->data[current_word_start]);
+
+	/* Inside word, remove it from original, and move cursor to right spot. */
+	if (current_x >= current_word_start) {
+	    right = current_x - current_word_start;
+	    current_x = 0;
+	    down = 1;
+	}
+
+	inptr->data = nrealloc(inptr->data, current_x + 1);
+	inptr->data[current_x] = 0;
+
+	if (ISSET(MARK_ISSET) && (mark_beginbuf == inptr)) {
+	    mark_beginbuf = temp;
+	    mark_beginx = 0;
 	}
     }
 
+    /* Category 2: two or more words on the line. */
+    else {
+
+	/* Case 2a: cursor before word at wrap point. */
+	if (current_x < current_word_start) {
+	    temp->data =
+		nmalloc(strlen(&inptr->data[current_word_start]) + 1);
+	    strcpy(temp->data, &inptr->data[current_word_start]);
+
+	    if (!isspace(input_char)) {
+		i = current_word_start - 1;
+		while (isspace(inptr->data[i])) {
+		    i--;
+		    assert(i >= 0);
+		}
+	    } else if (current_x <= last_word_end)
+		i = last_word_end - 1;
+	    else
+		i = current_x;
+
+	    inptr->data = nrealloc(inptr->data, i + 2);
+	    inptr->data[i + 1] = 0;
+	}
+
+
+	/* Case 2b: cursor at word at wrap point. */
+	else if ((current_x >= current_word_start)
+		 && (current_x <= (current_word_end + 1))) {
+	    temp->data =
+		nmalloc(strlen(&inptr->data[current_word_start]) + 1);
+	    strcpy(temp->data, &inptr->data[current_word_start]);
+
+	    down = 1;
+
+	    right = current_x - current_word_start;
+	    i = current_word_start - 1;
+	    if (isspace(input_char) && (current_x == current_word_start)) {
+		current_x = current_word_start;
+
+		inptr->data =
+		    nrealloc(inptr->data, current_word_start + 1);
+		inptr->data[current_word_start] = 0;
+	    } else {
+
+		while (isspace(inptr->data[i])) {
+		    i--;
+		    assert(i >= 0);
+		}
+		inptr->data = nrealloc(inptr->data, i + 2);
+		inptr->data[i + 1] = 0;
+	    }
+	}
+
+
+	/* Case 2c: cursor past word at wrap point. */
+	else {
+	    temp->data =
+		nmalloc(strlen(&inptr->data[current_word_start]) + 1);
+	    strcpy(temp->data, &inptr->data[current_word_start]);
+
+	    down = 1;
+	    right = current_x - current_word_start;
+
+	    current_x = current_word_start;
+	    i = current_word_start - 1;
+
+	    while (isspace(inptr->data[i])) {
+		i--;
+		assert(i >= 0);
+		inptr->data = nrealloc(inptr->data, i + 2);
+		inptr->data[i + 1] = 0;
+	    }
+	}
+    }
+
+    /* We pre-pend wrapped part to next line. */
+    if (ISSET(SAMELINEWRAP) && inptr->next) {
+	/* Plus one for the space which concatenates the two lines together plus 1 for \0. */
+	char *p =
+	    nmalloc(strlen(temp->data) + strlen(inptr->next->data) + 2);
+	int old_x = current_x, old_y = current_y;
+
+	strcpy(p, temp->data);
+	strcat(p, " ");
+	strcat(p, inptr->next->data);
+
+	free(inptr->next->data);
+	inptr->next->data = p;
+
+	free(temp->data);
+	free(temp);
+
+
+	/* The next line line may need to be wrapped as well. */
+	current_y = old_y + 1;
+	current_x = strlen(inptr->next->data);
+	while (current_x >= 0) {
+	    if (isspace(inptr->next->data[current_x])
+		&& (current_x < fill)) break;
+	    current_x--;
+	}
+	if (current_x >= 0)
+	    check_wrap(inptr->next, ' ');
+
+	current_x = old_x;
+	current_y = old_y;
+    }
+    /* Else we start a new line. */
+    else {
+	temp->prev = inptr;
+	temp->next = inptr->next;
+
+	if (inptr->next)
+	    inptr->next->prev = temp;
+	inptr->next = temp;
+
+	if (!temp->next)
+	    filebot = temp;
+
+	SET(SAMELINEWRAP);
+    }
+
+
+    totlines++;
+    totsize++;
+
+    renumber(inptr);
+    edit_update_top(edittop);
+
+
+    /* Move the cursor to the new line if appropriate. */
+    if (down) {
+	do_right();
+    }
+
+    /* Move the cursor to the correct spot in the line if appropriate. */
+    while (right--) {
+	do_right();
+    }
+
+    edit_update_top(edittop);
+    reset_cursor();
+    edit_refresh();
 }
 
 /* Check to see if we've just caused the line to wrap to a new line */
-void check_wrap(filestruct * inptr)
+void check_wrap(filestruct * inptr, char ch)
 {
-
+    int len = strlenpt(inptr->data);
 #ifdef DEBUG
     fprintf(stderr, _("check_wrap called with inptr->data=\"%s\"\n"),
 	    inptr->data);
 #endif
 
-    if ((int) strlenpt(inptr->data) <= fill)
+    if (len <= fill)
 	return;
-    else
-	do_wrap(inptr);
+    else {
+	int i = actual_x(inptr, fill);
+
+	/* Do not wrap if there are no words on or after wrap point. */
+	int char_found = 0;
+
+	while (isspace(inptr->data[i]) && inptr->data[i])
+	    i++;
+
+	if (!inptr->data[i])
+	    return;
+
+	/* String must be at least 1 character long. */
+	for (i = strlen(inptr->data) - 1; i >= 0; i--) {
+	    if (isspace(inptr->data[i])) {
+		if (!char_found)
+		    continue;
+		char_found = 2;	/* 2 for yes do wrap. */
+		break;
+	    } else
+		char_found = 1;	/* 1 for yes found a word, but must check further. */
+	}
+
+	if (char_found == 2)
+	    do_wrap(inptr, ch);
+    }
 }
 
 /* Stuff we do when we abort from programs and want to clean up the
@@ -1066,316 +886,6 @@ void do_early_abort(void)
 {
     blank_statusbar_refresh();
 }
-
-/* Set up the system variables for a search or replace.  Returns -1 on
-   abort, 0 on success, and 1 on rerun calling program 
-   Return -2 to run opposite program (searchg -> replace, replace -> search)
-
-   replacing = 1 if we call from do_replace, 0 if called from do_search func.
-*/
-int search_init(int replacing)
-{
-    int i;
-    char buf[135];
-
-    if (last_search[0]) {
-	sprintf(buf, " [%s]", last_search);
-    } else {
-	buf[0] = '\0';
-    }
-
-    i = statusq(replacing ? replace_list : whereis_list,
-		replacing ? REPLACE_LIST_LEN : WHEREIS_LIST_LEN, "",
-		ISSET(CASE_SENSITIVE) ? _("Case Sensitive Search%s") :
-		_("Search%s"), buf);
-
-    /* Cancel any search, or just return with no previous search */
-    if ((i == -1) || (i < 0 && !last_search[0])) {
-	statusbar(_("Search Cancelled"));
-	reset_cursor();
-	return -1;
-    } else if (i == -2) {	/* Same string */
-	strncpy(answer, last_search, 132);
-    } else if (i == 0) {	/* They entered something new */
-	strncpy(last_search, answer, 132);
-
-	/* Blow away last_replace because they entered a new search
-	   string....uh, right? =) */
-	last_replace[0] = '\0';
-    } else if (i == NANO_CASE_KEY) {	/* They want it case sensitive */
-	if (ISSET(CASE_SENSITIVE))
-	    UNSET(CASE_SENSITIVE);
-	else
-	    SET(CASE_SENSITIVE);
-
-	return 1;
-    } else if (i == NANO_OTHERSEARCH_KEY) {
-	return -2;		/* Call the opposite search function */
-    } else {			/* First line key, etc. */
-	do_early_abort();
-	return -3;
-    }
-
-    return 0;
-}
-
-filestruct *findnextstr(int quiet, filestruct * begin, char *needle)
-{
-    filestruct *fileptr;
-    char *searchstr, *found = NULL, *tmp;
-
-    fileptr = current;
-
-    searchstr = &current->data[current_x + 1];
-    /* Look for searchstr until EOF */
-    while (fileptr != NULL &&
-	   (found = strstrwrapper(searchstr, needle)) == NULL) {
-	fileptr = fileptr->next;
-
-	if (fileptr == begin)
-	    return NULL;
-
-	if (fileptr != NULL)
-	    searchstr = fileptr->data;
-    }
-
-    /* If we're not at EOF, we found an instance */
-    if (fileptr != NULL) {
-	current = fileptr;
-	current_x = 0;
-	for (tmp = fileptr->data; tmp != found; tmp++)
-	    current_x++;
-
-	edit_update(current);
-	reset_cursor();
-    } else {			/* We're at EOF, go back to the top, once */
-
-	fileptr = fileage;
-
-	while (fileptr != current && fileptr != begin &&
-	       (found = strstrwrapper(fileptr->data, needle)) == NULL)
-	    fileptr = fileptr->next;
-
-	if (fileptr == begin) {
-	    if (!quiet)
-		statusbar(_("\"%s\" not found"), needle);
-
-	    return NULL;
-	}
-	if (fileptr != current) {	/* We found something */
-	    current = fileptr;
-	    current_x = 0;
-	    for (tmp = fileptr->data; tmp != found; tmp++)
-		current_x++;
-
-	    edit_update(current);
-	    reset_cursor();
-
-	    if (!quiet)
-		statusbar(_("Search Wrapped"));
-	} else {		/* Nada */
-
-	    if (!quiet)
-		statusbar(_("\"%s\" not found"), needle);
-	    return NULL;
-	}
-    }
-
-    return fileptr;
-}
-
-void search_abort(void)
-{
-    UNSET(KEEP_CUTBUFFER);
-    display_main_list();
-    wrefresh(bottomwin);
-}
-
-/* Search for a string */
-int do_search(void)
-{
-    int i;
-    filestruct *fileptr = current;
-
-    wrap_reset();
-    if ((i = search_init(0)) == -1) {
-	current = fileptr;
-	search_abort();
-	return 0;
-    } else if (i == -3) {
-	search_abort();
-	return 0;
-    } else if (i == -2) {
-	search_abort();
-	do_replace();
-	return 0;
-    } else if (i == 1) {
-	do_search();
-	search_abort();
-	return 1;
-    }
-    findnextstr(0, current, answer);
-    search_abort();
-    return 1;
-}
-
-void print_replaced(int num)
-{
-    if (num > 1)
-	statusbar(_("Replaced %d occurences"), num);
-    else if (num == 1)
-	statusbar(_("Replaced 1 occurence"));
-}
-
-void replace_abort(void)
-{
-    UNSET(KEEP_CUTBUFFER);
-    display_main_list();
-    reset_cursor();
-}
-
-/* Search for a string */
-int do_replace(void)
-{
-    int i, replaceall = 0, numreplaced = 0, beginx;
-    filestruct *fileptr, *begin;
-    char *tmp, *copy, prevanswer[132] = "";
-
-    if ((i = search_init(1)) == -1) {
-	statusbar(_("Replace Cancelled"));
-	replace_abort();
-	return 0;
-    } else if (i == 1) {
-	do_replace();
-	return 1;
-    } else if (i == -2) {
-	replace_abort();
-	do_search();
-	return 0;
-    } else if (i == -3) {
-	replace_abort();
-	return 0;
-    }
-    strncpy(prevanswer, answer, 132);
-
-    if (strcmp(last_replace, "")) {	/* There's a previous replace str */
-	i = statusq(replace_list, REPLACE_LIST_LEN, "",
-		    _("Replace with [%s]"), last_replace);
-
-	if (i == -1) {		/* Aborted enter */
-	    strncpy(answer, last_replace, 132);
-	    statusbar(_("Replace Cancelled"));
-	    replace_abort();
-	    return 0;
-	} else if (i == 0)	/* They actually entered something */
-	    strncpy(last_replace, answer, 132);
-	else if (i == NANO_CASE_KEY) {	/* They asked for case sensitivity */
-	    if (ISSET(CASE_SENSITIVE))
-		UNSET(CASE_SENSITIVE);
-	    else
-		SET(CASE_SENSITIVE);
-
-	    do_replace();
-	    return 0;
-	} else {		/* First page, last page, for example could get here */
-
-	    do_early_abort();
-	    replace_abort();
-	    return 0;
-	}
-    } else {			/* last_search is empty */
-
-	i = statusq(replace_list, REPLACE_LIST_LEN, "", _("Replace with"));
-	if (i == -1) {
-	    statusbar(_("Replace Cancelled"));
-	    reset_cursor();
-	    replace_abort();
-	    return 0;
-	} else if (i == 0)	/* They entered something new */
-	    strncpy(last_replace, answer, 132);
-	else if (i == NANO_CASE_KEY) {	/* They want it case sensitive */
-	    if (ISSET(CASE_SENSITIVE))
-		UNSET(CASE_SENSITIVE);
-	    else
-		SET(CASE_SENSITIVE);
-
-	    do_replace();
-	    return 1;
-	} else {		/* First line key, etc. */
-
-	    do_early_abort();
-	    replace_abort();
-	    return 0;
-	}
-    }
-
-    /* save where we are */
-    begin = current;
-    beginx = current_x;
-
-    while (1) {
-
-	if (replaceall)
-	    fileptr = findnextstr(1, begin, prevanswer);
-	else
-	    fileptr = findnextstr(0, begin, prevanswer);
-
-	/* No more matches.  Done! */
-	if (!fileptr)
-	    break;
-
-	/* If we're here, we've found the search string */
-	if (!replaceall)
-	    i = do_yesno(1, 1, _("Replace this instance?"));
-
-	if (i > 0 || replaceall) {	/* Yes, replace it!!!! */
-	    if (i == 2)
-		replaceall = 1;
-
-	    /* Create buffer */
-	    copy = nmalloc(strlen(current->data) - strlen(last_search) +
-			   strlen(last_replace) + 1);
-
-	    /* Head of Original Line */
-	    strncpy(copy, current->data, current_x);
-	    copy[current_x] = 0;
-
-	    /* Replacement Text */
-	    strcat(copy, last_replace);
-
-	    /* The tail of the original line */
-	    /*  This may expose other bugs, because it no longer
-	       goes through each character on the string
-	       and tests for string goodness.  But because
-	       we can assume the invariant that current->data
-	       is less than current_x + strlen(last_search) long,   
-	       this should be safe.  Or it will expose bugs ;-) */
-	    tmp = current->data + current_x + strlen(last_search);
-	    strcat(copy, tmp);
-
-	    /* Cleanup */
-	    free(current->data);
-	    current->data = copy;
-
-	    /* Stop bug where we replace a substring of the replacement text */
-	    current_x += strlen(last_replace);
-
-	    edit_refresh();
-	    set_modified();
-	    numreplaced++;
-	} else if (i == -1)	/* Abort, else do nothing and continue loop */
-	    break;
-    }
-
-    current = begin;
-    current_x = beginx;
-    renumber_all();
-    edit_update(current);
-    print_replaced(numreplaced);
-    replace_abort();
-    return 1;
-}
-
 
 int page_up(void)
 {
@@ -1446,8 +956,7 @@ int do_backspace(void)
 	}
 
 	/* Ooops, sanity check */
-	if (tmp == filebot)
-	{
+	if (tmp == filebot) {
 	    filebot = current;
 	    editbot = current;
 	}
@@ -1488,8 +997,7 @@ int do_delete(void)
 	strcat(current->data, current->next->data);
 
 	foo = current->next;
-	if (filebot == foo)
-	{
+	if (filebot == foo) {
 	    filebot = current;
 	    editbot = current;
 	}
@@ -1511,267 +1019,9 @@ int do_delete(void)
     return 1;
 }
 
-void goto_abort(void)
-{
-    UNSET(KEEP_CUTBUFFER);
-    display_main_list();
-}
-
-int do_gotoline(long defline)
-{
-    long line, i = 1, j = 0;
-    filestruct *fileptr;
-
-    if (defline > 0)		/* We already know what line we want to go to */
-	line = defline;
-    else {			/* Ask for it */
-
-	j = statusq(goto_list, GOTO_LIST_LEN, "", _("Enter line number"));
-	if (j == -1) {
-	    statusbar(_("Aborted"));
-	    goto_abort();
-	    return 0;
-	} else if (j != 0) {
-	    do_early_abort();
-	    goto_abort();
-	    return 0;
-	}
-	if (!strcmp(answer, "$")) {
-	    current = filebot;
-	    current_x = 0;
-	    edit_update(current);
-	    goto_abort();
-	    return 1;
-	}
-	line = atoi(answer);
-    }
-
-    /* Bounds check */
-    if (line <= 0) {
-	statusbar(_("Come on, be reasonable"));
-	goto_abort();
-	return 0;
-    }
-    if (line > totlines) {
-	statusbar(_("Only %d lines available, skipping to last line"),
-		  filebot->lineno);
-	current = filebot;
-	current_x = 0;
-	edit_update(current);
-    } else {
-	for (fileptr = fileage; fileptr != NULL && i < line; i++)
-	    fileptr = fileptr->next;
-
-	current = fileptr;
-	current_x = 0;
-	edit_update(current);
-    }
-
-    goto_abort();
-    return 1;
-}
-
-int do_gotoline_void(void)
-{
-    return do_gotoline(0);
-}
-
 void wrap_reset(void)
 {
     UNSET(SAMELINEWRAP);
-}
-
-/*
- * Write a file out.  If tmp is nonzero, we set the umask to 0600,
- * we don't set the global variable filename to it's name, and don't
- * print out how many lines we wrote on the statusbar.
- * 
- * Note that tmp is only set to 1 for storing temporary files internal
- * to the editor, and is completely different from temp_opt.
- */
-int write_file(char *name, int tmp)
-{
-    long size, lineswritten = 0;
-    char buf[PATH_MAX + 1];
-    filestruct *fileptr;
-    int fd, mask = 0;
-    struct stat st;
-
-    if (!strcmp(name, "")) {
-	statusbar(_("Cancelled"));
-	return -1;
-    }
-    titlebar();
-    fileptr = fileage;
-
-
-    /* Open the file and truncate it.  Trust the symlink. */
-    if (ISSET(FOLLOW_SYMLINKS) && !tmp) {
-	if ((fd = open(name, O_WRONLY | O_CREAT | O_TRUNC,
-		       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH |
-		       S_IWOTH)) == -1) {
-	    statusbar(_("Could not open file for writing: %s"),
-		      strerror(errno));
-	    return -1;
-	}
-    }
-    /* Don't follow symlink.  Create new file. */
-    else {
-	if (strlen(name) > (PATH_MAX - 7)) {
-	    statusbar(_("Could not open file: Path length exceeded."));
-	    return -1;
-	}
-
-	memset(buf, 0x00, PATH_MAX + 1);
-	strcat(buf, name);
-	strcat(buf, ".XXXXXX");
-	if ((fd = mkstemp(buf)) == -1) {
-	    statusbar(_("Could not open file for writing: %s"),
-		      strerror(errno));
-	    return -1;
-	}
-    }
-
-
-
-    dump_buffer(fileage);
-    while (fileptr != NULL && fileptr->next != NULL) {
-	size = write(fd, fileptr->data, strlen(fileptr->data));
-	if (size == -1) {
-	    statusbar(_("Could not open file for writing: %s"),
-		      strerror(errno));
-	    return -1;
-	} else {
-#ifdef DEBUG
-	    fprintf(stderr, _("Wrote >%s\n"), fileptr->data);
-#endif
-	}
-	write(fd, "\n", 1);
-
-	fileptr = fileptr->next;
-	lineswritten++;
-    }
-
-    if (fileptr != NULL) {
-	size = write(fd, fileptr->data, strlen(fileptr->data));
-	if (size == -1) {
-	    statusbar(_("Could not open file for writing: %s"),
-		      strerror(errno));
-	    return -1;
-	} else if (size > 0) {
-	    size = write(fd, "\n", 1);
-	    if (size == -1) {
-		statusbar(_("Could not open file for writing: %s"),
-			  strerror(errno));
-		return -1;
-	    }
-	}
-    }
-
-
-    if (close(fd) == -1) {
-	statusbar(_("Could not close %s: %s"), name, strerror(errno));
-	unlink(buf);
-	return -1;
-    }
-
-    if (!ISSET(FOLLOW_SYMLINKS) || tmp) {
-	if (stat(name, &st) == -1) {
-	    /* Use default umask as file permisions if file is a new file. */
-	    mask = umask(0);
-	    umask(mask);
-
-	    if (tmp)		/* We don't want anyone reading our temporary file! */
-		mask = 0600;
-	    else
-		mask = 0666 & ~mask;
-
-	} else {
-	    /* Use permissions from file we are overwriting. */
-	    mask = st.st_mode;
-	    if (unlink(name) == -1) {
-		if (errno != ENOENT) {
-		    statusbar(_("Could not open %s for writing: %s"),
-			      name, strerror(errno));
-		    unlink(buf);
-		    return -1;
-		}
-	    }
-	}
-
-	if (link(buf, name) != -1)
-	    unlink(buf);
-	else if (errno != EPERM) {
-	    statusbar(_("Could not open %s for writing: %s"),
-		      name, strerror(errno));
-	    unlink(buf);
-	    return -1;
-	} else if (rename(buf, name) == -1) {	/* Try a rename?? */
-	    statusbar(_("Could not open %s for writing: %s"),
-		      name, strerror(errno));
-	    unlink(buf);
-	    return -1;
-	}
-	if (chmod(name, mask) == -1) {
-	    statusbar(_("Could not set permissions %o on %s: %s"),
-		      mask, name, strerror(errno));
-	}
-
-    }
-    if (!tmp) {
-	strncpy(filename, name, 132);
-	statusbar(_("Wrote %d lines"), lineswritten);
-    }
-    UNSET(MODIFIED);
-    titlebar();
-    return 1;
-}
-
-int do_writeout(int exiting)
-{
-    int i = 0;
-
-    strncpy(answer, filename, 132);
-
-    if ((exiting) && (temp_opt) && (filename)) {
-	i = write_file(answer, 0);
-	display_main_list();
-	return i;
-    }
-
-    while (1) {
-	i = statusq(writefile_list, WRITEFILE_LIST_LEN, answer,
-	            _("File Name to write"));
-
-        if (i != -1) {
-
-#ifdef DEBUG
-	    fprintf(stderr, _("filename is %s"), answer);
-#endif
-	    if (strncmp(answer, filename, 132)) {
-		struct stat st;
-		if (!stat(answer, &st)) {
-		    i = do_yesno(0, 0, _("File exists, OVERWRITE ?"));
-
-		    if (!i || (i == -1))
-			continue;
-                }
-            }
-	    i = write_file(answer, 0);
-
-	    display_main_list();
-	    return i;
-        } else {
-	    statusbar(_("Cancelled"));
-	    display_main_list();
-	    return 0;
-        }
-    }
-}
-
-int do_writeout_void(void)
-{
-    return do_writeout(0);
 }
 
 /* Stuff we want to do when we exit the spell program one of its many ways */
@@ -2010,7 +1260,6 @@ void handle_sigwinch(int s)
     center_x = COLS / 2;
     center_y = LINES / 2;
     editwinrows = LINES - 5 + no_help();
-    editwineob = editwinrows - 1;
     fill = COLS - 8;
 
     free(hblank);
@@ -2040,15 +1289,20 @@ void handle_sigwinch(int s)
 
     editbot = edittop;
 
-    for (i = 0; (i <= editwineob) && (editbot->next != NULL)
+    for (i = 0; (i <= editwinrows - 1) && (editbot->next != NULL)
 	 && (editbot->next != filebot); i++)
 	editbot = editbot->next;
 
-    if (current_y > editwineob) {
+    if (current_y > editwinrows - 1) {
 	edit_update(editbot);
     }
     erase();
+
+    /* Do these b/c width may have changed... */
     refresh();
+    titlebar();
+    edit_refresh();
+    display_main_list();
     total_refresh();
 #endif
 }
@@ -2174,17 +1428,17 @@ int do_justify(void)
     justify_format(current->data);
 
     slen = strlen(current->data);
-    while ((strlenpt(current->data) > (fill + 1))
+    while ((strlenpt(current->data) > (fill))
 	   && !no_spaces(current->data)) {
 	int i = 0;
 	int len2 = 0;
 	filestruct *tmpline = nmalloc(sizeof(filestruct));
 
-	/* Start at fill + 2, unless line isn't that long (but it appears at least
-	 * fill + 2 long with tabs.
+	/* Start at fill , unless line isn't that long (but it appears at least
+	 * fill long with tabs.
 	 */
-	if (slen > (fill + 2))
-	    i = fill + 2;
+	if (slen > fill)
+	    i = fill;
 	else
 	    i = slen;
 	for (; i > 0; i--) {
@@ -2217,26 +1471,35 @@ int do_justify(void)
 	current_y++;
     }
 
-    renumber(initial);
 
     if (current->next)
 	current = current->next;
+    else
+	filebot = current;
     current_x = 0;
     placewewant = 0;
 
-    if ((current_y < 0) || (current_y >= editwineob) || (initial_y <= 0)) {
+    renumber(initial);
+    totlines = filebot->lineno;
+
+    werase(edit);
+
+    if ((current_y < 0) || (current_y >= editwinrows - 1)
+	|| (initial_y <= 0)) {
 	edit_update(current);
 	center_cursor();
     } else {
 	int i = 0;
 
 	editbot = edittop;
-	for (i = 0; (i <= editwineob) && (editbot->next != NULL)
+	for (i = 0; (i <= editwinrows - 1) && (editbot->next != NULL)
 	     && (editbot->next != filebot); i++)
 	    editbot = editbot->next;
-	edit_refresh();
     }
 
+
+    edit_refresh();
+    edit_refresh();		/* XXX FIXME XXX */
     statusbar("Justify Complete");
     return 1;
 #else
@@ -2301,6 +1564,9 @@ int main(int argc, char *argv[])
     struct sigaction act;	/* For our lovely signals */
     int keyhandled = 0;		/* Have we handled the keystroke yet? */
     int tmpkey = 0, i;
+#ifdef HAVE_TABSIZE
+    int usrtabsize = 0;		/* User defined tab size */
+#endif
     char *argv0;
     struct termios term;
 
@@ -2320,6 +1586,9 @@ int main(int argc, char *argv[])
 	{"mouse", 0, 0, 'm'},
 	{"pico", 0, 0, 'p'},
 	{"nofollow", 0, 0, 'l'},
+#ifdef HAVE_TABSIZE
+	{"tabsize", 0, 0, 'T'},
+#endif
 	{0, 0, 0, 0}
     };
 #endif
@@ -2334,13 +1603,26 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef HAVE_GETOPT_LONG
-    while ((optchr = getopt_long(argc, argv, "?Vchilmpr:s:tvwxz",
+    while ((optchr = getopt_long(argc, argv, "?T:Vchilmpr:s:tvwxz",
 				 long_options, &option_index)) != EOF) {
 #else
-    while ((optchr = getopt(argc, argv, "h?Vcilmpr:s:tvwxz")) != EOF) {
+    while ((optchr = getopt(argc, argv, "h?T:Vcilmpr:s:tvwxz")) != EOF) {
 #endif
 
 	switch (optchr) {
+#ifdef HAVE_TABSIZE
+	case 'T':
+	    usrtabsize = atoi(optarg);
+	    if (usrtabsize <= 0) {
+		usage();	/* To stop bogus data for tab width */
+		finish(1);
+	    }
+	    break;
+#else
+	case 'T':
+	    usage();		/* Oops!  You dont really have that option */
+	    finish(1);
+#endif
 	case 'V':
 	    version();
 	    exit(0);
@@ -2391,7 +1673,7 @@ int main(int argc, char *argv[])
 	    break;
 	default:
 	    usage();
-	   exit(0);
+	    exit(0);
 	}
 
     }
@@ -2424,15 +1706,15 @@ int main(int argc, char *argv[])
 
 
     /* First back up the old settings so they can be restored, duh */
-    tcgetattr (0, &oldterm);
+    tcgetattr(0, &oldterm);
 
     /* Adam's code to blow away intr character so ^C can show cursor pos */
-    tcgetattr (0, &term);
+    tcgetattr(0, &term);
     for (i = 0; i < NCCS; i++) {
 	if (term.c_cc[i] == CINTR || term.c_cc[i] == CQUIT)
-	     term.c_cc[i] = 0;
+	    term.c_cc[i] = 0;
     }
-    tcsetattr (0, TCSANOW, &term);
+    tcsetattr(0, TCSANOW, &term);
 
     /* now ncurses init stuff... */
     initscr();
@@ -2449,7 +1731,7 @@ int main(int argc, char *argv[])
     help_init();
 
     /* Trap SIGINT and SIGQUIT  cuz we want them to do useful things. */
-    memset (&act, 0, sizeof (struct sigaction));
+    memset(&act, 0, sizeof(struct sigaction));
     act.sa_handler = SIG_IGN;
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGQUIT, &act, NULL);
@@ -2509,6 +1791,11 @@ int main(int argc, char *argv[])
 
     edit_refresh();
     reset_cursor();
+
+#ifdef HAVE_TABSIZE
+    if (usrtabsize > 0)
+	TABSIZE = usrtabsize;
+#endif
 
     while (1) {
 	kbinput = wgetch(edit);
