@@ -586,10 +586,17 @@ int open_file(const char *filename, bool newfie, FILE **f)
 {
     struct stat fileinfo;
     int fd;
+    char *full_filename;
 
     assert(filename != NULL && f != NULL);
 
-    if (stat(filename, &fileinfo) == -1) {
+    /* Get the specified file's full path. */
+    full_filename = get_full_path(filename);
+
+    if (full_filename == NULL)
+	full_filename = mallocstrcpy(NULL, filename);
+
+    if (stat(full_filename, &fileinfo) == -1) {
 	if (newfie) {
 	    statusbar(_("New File"));
 	    return -2;
@@ -606,8 +613,9 @@ int open_file(const char *filename, bool newfie, FILE **f)
 		_("\"%s\" is a device file"), filename);
 	beep();
 	return -1;
-    } else if ((fd = open(filename, O_RDONLY)) == -1) {
-	statusbar(_("Error reading %s: %s"), filename, strerror(errno));
+    } else if ((fd = open(full_filename, O_RDONLY)) == -1) {
+	statusbar(_("Error reading %s: %s"), filename,
+		strerror(errno));
 	beep();
  	return -1;
      } else {
@@ -622,6 +630,8 @@ int open_file(const char *filename, bool newfie, FILE **f)
 	} else
 	    statusbar(_("Reading File"));
     }
+
+    free(full_filename);
 
     return 0;
 }
@@ -691,9 +701,9 @@ void do_insertfile(
     while (TRUE) {
 #ifndef NANO_TINY
 	if (execute) {
-	    msg = 
+	    msg =
 #ifdef ENABLE_MULTIBUFFER
-		ISSET(MULTIBUFFER) ? 
+		ISSET(MULTIBUFFER) ?
 		_("Command to execute in new buffer [from %s] ") :
 #endif
 		_("Command to execute [from %s] ");
@@ -701,7 +711,7 @@ void do_insertfile(
 #endif
 	    msg =
 #ifdef ENABLE_MULTIBUFFER
-		ISSET(MULTIBUFFER) ? 
+		ISSET(MULTIBUFFER) ?
 		_("File to insert into new buffer [from %s] ") :
 #endif
 		_("File to insert [from %s] ");
@@ -1786,7 +1796,11 @@ bool do_writeout(bool exiting)
 
 	backupstr = ISSET(BACKUP_FILE) ? _(" [Backup]") : "";
 
-	if (!exiting && openfile->mark_set)
+	/* If we're using restricted mode, don't display the "Write
+	 * Selection to File" prompt.  This function is disabled, since
+	 * it allows reading from or writing to files not specified on
+	 * the command line. */
+	if (!ISSET(RESTRICTED) && !exiting && openfile->mark_set)
 	    msg = (append == PREPEND) ?
 		_("Prepend Selection to File") : (append == APPEND) ?
 		_("Append Selection to File") :
@@ -1882,7 +1896,7 @@ bool do_writeout(bool exiting)
 
 	    if (append == OVERWRITE) {
 		size_t answer_len = strlen(answer);
-		bool name_exists, different_name;
+		bool name_exists, do_warning;
 		char *full_answer, *full_filename;
 		struct stat st;
 
@@ -1890,10 +1904,14 @@ bool do_writeout(bool exiting)
 		 * full path. */
 		sunder(answer);
 
-		name_exists = (stat(answer, &st) != -1);
 		full_answer = get_full_path(answer);
 		full_filename = get_full_path(openfile->filename);
-		different_name = (strcmp((full_answer == NULL) ?
+		name_exists = (stat((full_answer == NULL) ? answer :
+			full_answer, &st) != -1);
+		if (openfile->filename[0] == '\0')
+		    do_warning = name_exists;
+		else
+		    do_warning = (strcmp((full_answer == NULL) ?
 			answer : full_answer, (full_filename == NULL) ?
 			openfile->filename : full_filename) != 0);
 
@@ -1906,28 +1924,26 @@ bool do_writeout(bool exiting)
 		if (full_answer != NULL)
 		    free(full_answer);
 
-		if (different_name) {
-		    if (name_exists) {
-			/* If we're using restricted mode, we aren't
-			 * allowed to save a new file under the name of
-			 * an existing file. */
-			if (ISSET(RESTRICTED))
-			    continue;
+		if (do_warning) {
+		    /* If we're using restricted mode, we aren't allowed
+		     * to overwrite an existing file with the current
+		     * file.  We also aren't allowed to change the name
+		     * of the current file if it has one, because that
+		     * would allow reading from or writing to files not
+		     * specified on the command line. */
+		    if (ISSET(RESTRICTED))
+			continue;
 
+		    if (name_exists) {
 			i = do_yesno_prompt(FALSE,
 				_("File exists, OVERWRITE ? "));
 			if (i == 0 || i == -1)
 			    continue;
-		    /* If we're using restricted mode, we aren't allowed
-		     * to change the name of a file once it has one,
-		     * because that would allow reading from or writing
-		     * to files not specified on the command line. */
-		    } else if (!ISSET(RESTRICTED) &&
-			openfile->filename[0] != '\0'
+		    } else
 #ifndef NANO_TINY
-			&& (exiting || !openfile->mark_set)
+		    if (exiting || !openfile->mark_set)
 #endif
-			) {
+		    {
 			i = do_yesno_prompt(FALSE,
 				_("Save file under DIFFERENT NAME ? "));
 			if (i == 0 || i == -1)
@@ -1942,9 +1958,9 @@ bool do_writeout(bool exiting)
 	    align(&answer);
 
 	    /* Here's where we allow the selected text to be written to
-	     * a separate file.  If we're using restricted mode, this is
-	     * disabled, since it allows reading from or writing to
-	     * files not specified on the command line. */
+	     * a separate file.  If we're using restricted mode, this
+	     * function is disabled, since it allows reading from or
+	     * writing to files not specified on the command line. */
 	    retval =
 #ifndef NANO_TINY
 		(!ISSET(RESTRICTED) && !exiting && openfile->mark_set) ?
@@ -1973,45 +1989,45 @@ void do_writeout_void(void)
  * convert ~user/ and ~/ notation. */
 char *real_dir_from_tilde(const char *buf)
 {
-    char *dirtmp = NULL;
+    char *retval;
 
     assert(buf != NULL);
 
     if (buf[0] == '~') {
-	size_t i;
-	const char *tilde_dir;
+	size_t i = 1;
+	char *tilde_dir;
 
-	/* Figure out how much of the str we need to compare. */
-	for (i = 1; buf[i] != '/' && buf[i] != '\0'; i++)
+	/* Figure out how much of the string we need to compare. */
+	for (; buf[i] != '/' && buf[i] != '\0'; i++)
 	    ;
 
 	/* Get the home directory. */
 	if (i == 1) {
 	    get_homedir();
-	    tilde_dir = homedir;
+	    tilde_dir = mallocstrcpy(NULL, homedir);
 	} else {
 	    const struct passwd *userdata;
 
+	    tilde_dir = mallocstrncpy(NULL, buf, i + 1);
+	    tilde_dir[i] = '\0';
+
 	    do {
 		userdata = getpwent();
-	    } while (userdata != NULL &&
-		strncmp(userdata->pw_name, buf + 1, i - 1) != 0);
+	    } while (userdata != NULL && strcmp(userdata->pw_name,
+		tilde_dir + 1) != 0);
 	    endpwent();
-	    tilde_dir = userdata->pw_dir;
+	    if (userdata != NULL)
+		tilde_dir = mallocstrcpy(tilde_dir, userdata->pw_dir);
 	}
 
-	if (tilde_dir != NULL) {
-	    dirtmp = charalloc(strlen(tilde_dir) + strlen(buf + i) + 1);
-	    sprintf(dirtmp, "%s%s", tilde_dir, buf + i);
-	}
-    }
+	retval = charalloc(strlen(tilde_dir) + strlen(buf + i) + 1);
+	sprintf(retval, "%s%s", tilde_dir, buf + i);
 
-    /* Set a default value for dirtmp, in case the user's home directory
-     * isn't found. */
-    if (dirtmp == NULL)
-	dirtmp = mallocstrcpy(NULL, buf);
+	free(tilde_dir);
+    } else
+	retval = mallocstrcpy(NULL, buf);
 
-    return dirtmp;
+    return retval;
 }
 
 #if !defined(DISABLE_TABCOMP) || !defined(DISABLE_BROWSER)
@@ -2239,7 +2255,7 @@ char *input_tab(char *buf, bool allow_files, size_t *place, bool
 
     /* If the word starts with `~' and there is no slash in the word,
      * then try completing this word as a username. */
-    if (*place > 0 && *buf == '~') {
+    if (*place > 0 && buf[0] == '~') {
 	const char *bob = strchr(buf, '/');
 
 	if (bob == NULL || bob >= buf + *place)
@@ -2252,7 +2268,7 @@ char *input_tab(char *buf, bool allow_files, size_t *place, bool
 	matches = cwd_tab_completion(buf, allow_files, &num_matches,
 		*place);
 
-    if (num_matches <= 0)
+    if (num_matches == 0)
 	beep();
     else {
 	size_t match, common_len = 0;
@@ -2408,7 +2424,7 @@ const char *tail(const char *foo)
 
     if (tmp == NULL)
 	tmp = foo;
-    else if (*tmp == '/')
+    else
 	tmp++;
 
     return tmp;
