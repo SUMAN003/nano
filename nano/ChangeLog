@@ -1,4 +1,75 @@
-CVS code -
+GNU nano 2.0.6 - 2007.04.26
+- text.c:
+  backup_lines()
+	- Avoid a segfault when the mark begins and ends on the line
+	  after the last line of the paragraph. (DLR)
+- TODO:
+	- Add entries for fixing limitations with pasting text and
+	  handling bad/incomplete UTF-8 sequences. (DLR)
+
+GNU nano 2.0.5 - 2007.04.22
+- files.c:
+  open_file()
+	- Open files using their full paths whenever possible, so that
+	  ~user/file.txt and "~user/file.txt" are treated the same way
+	  if ~user is a user's home directory. (DLR)
+  real_dir_from_tilde()
+	- Fix segfault when dealing with directory names that begin with
+	  "~", but that aren't users' home directories. (DLR, found by
+	  Justin Fletcher)
+	- Fix long-standing problem where directory names that began
+	  with "~", but that weren't users' home directories, could be
+	  erroneously treated as users' home directories (e.g. "~d/"
+	  would be treated as "~daemon/"). (DLR, found by Justin
+	  Fletcher)
+	- Simplify. (DLR)
+  do_writeout()
+	- Properly display the warning in all cases if we try to save
+	  (a) an existing file under a different name, or (b) a file
+	  with no name under an existing file's name. (DLR)
+	- Rename variable different_name to do_warning, for clarity.
+	  (DLR)
+	- If we're in restricted mode, we're not allowed to write
+	  selections to files, so don't display the "Write Selection to
+	  File" prompt. (DLR)
+	- Simplify. (DLR)
+  input_tab()
+	- Don't bother checking if num_matches is less than zero, as
+	  it's a size_t and hence unsigned. (DLR)
+  tail()
+	- Remove unneeded if statement. (DLR)
+- rcfile.c:
+  parse_include()
+	- Open files using their full paths whenever possible, so that
+	  ~user/file.txt and "~user/file.txt" are treated the same way
+	  if ~user is a user's home directory. (DLR)
+	- Properly check for the included file's being a directory, a
+	  character file, or a block file. (DLR)
+	- For consistency, display the filename as the user entered it
+	  if we can't read the specified file. (DLR)
+- winio.c:
+  parse_kbinput()
+	- Interpret Cancel and Shift-Cancel. (DLR)
+  get_escape_seq_kbinput()
+	- Add missing comments. (DLR)
+- doc/faq.html:
+	- Add a new section 4.14 to explain how autoindent affects
+	  pasted text. (John M. Gabriele, minor tweaks by DLR)
+- doc/syntax/asm.nanorc, doc/syntax/c.nanorc, doc/syntax/sh.nanorc:
+	- Copy the regex that highlights trailing whitespace from
+	  doc/syntax/java.nanorc to these files, as it's also useful in
+	  them. (Mike Frysinger, minor tweaks by DLR)
+
+GNU nano 2.0.4 - 2007.04.06
+- winio.c:
+  get_escape_seq_kbinput()
+	- Add escape sequences for Terminal. (DLR)
+- doc/faq.html:
+	- Update email address. (DLR)
+- AUTHORS:
+	- Update email address. (DLR)
+
+GNU nano 2.0.3 - 2007.01.29
 - General:
 	- Miscellaneous comment fixes. (DLR)
 	- More int -> bool conversions. (DLR)
