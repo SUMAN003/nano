@@ -586,6 +586,23 @@ size_t get_totsize(const filestruct *begin, const filestruct *end)
     return totsize;
 }
 
+/* Get back a pointer given a line number in the current openfilestruct */
+filestruct *fsfromline(ssize_t lineno)
+{
+    filestruct *f = openfile->current;
+
+    if (lineno <= openfile->current->lineno)
+	for (; f->lineno != lineno && f != openfile->fileage; f = f->prev)
+	   ;
+    else
+        for (; f->lineno != lineno && f->next != NULL; f = f->next)
+	    ;
+
+    if (f->lineno != lineno)
+	f = NULL;
+    return f;
+}
+
 #ifdef DEBUG
 /* Dump the filestruct inptr to stderr. */
 void dump_filestruct(const filestruct *inptr)

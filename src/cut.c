@@ -205,7 +205,7 @@ void do_cut_text(
 	if (!old_no_newlines)
 	    UNSET(NO_NEWLINES);
     } else if (!undoing)
-	update_undo(CUT, openfile);
+	update_undo(CUT);
 #endif
 	/* Leave the text in the cutbuffer, and mark the file as
 	 * modified. */
@@ -223,7 +223,9 @@ void do_cut_text(
 /* Move text from the current filestruct into the cutbuffer. */
 void do_cut_text_void(void)
 {
-    add_undo(CUT, openfile);
+#ifndef NANO_TINY
+    add_undo(CUT);
+#endif
     do_cut_text(
 #ifndef NANO_TINY
 	FALSE, FALSE, FALSE
@@ -242,7 +244,9 @@ void do_copy_text(void)
 /* Cut from the current cursor position to the end of the file. */
 void do_cut_till_end(void)
 {
-    add_undo(CUTTOEND, openfile);
+#ifndef NANO_TINY
+    add_undo(CUTTOEND);
+#endif
     do_cut_text(FALSE, TRUE, FALSE);
 }
 #endif /* !NANO_TINY */
