@@ -551,7 +551,7 @@ void do_redo(void)
     case SPLIT:
 	undidmsg = _("line split");
 	t = make_new_node(f);
-	t->data = mallocstrcpy(NULL, u->strdata);
+	t->data = mallocstrcpy(NULL, &u->strdata[u->begin]);
 	data = mallocstrncpy(NULL, f->data, u->begin);
 	data[u->begin] = '\0';
 	free(f->data);
@@ -806,7 +806,8 @@ void add_undo(undo_type current_action)
     /* Ugh, if we were called while cutting not-to-end, non-marked and on the same lineno,
        we need to  abort here */
     u = fs->current_undo;
-    if (u && u->type == CUT && !u->mark_set && u->lineno == fs->current->lineno)
+    if (current_action == CUT && u && u->type == CUT 
+	&& !u->mark_set && u->lineno == fs->current->lineno)
 	return;
 
     /* Blow away the old undo stack if we are starting from the middle */
