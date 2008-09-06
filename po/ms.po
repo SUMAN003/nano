@@ -1,14 +1,13 @@
-# Nano Editor Bahasa Melayu (Malay) (ms).
-# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the nano package.
-# Sharuzzaman Ahmat Raslan <sharuzzaman@myrealbox.com>, 2002, 2003, 2004, 2005, 2006, 2007, 2008.
+# Nano Editor Bahasa Melayu.
+# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+# Sharuzzaman Ahmat Raslan <sharuzzaman@myrealbox.com>, 2002, 2003, 2004, 2005, 2006, 2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nano 2.1.0\n"
+"Project-Id-Version: nano 2.0.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-24 02:41-0400\n"
-"PO-Revision-Date: 2008-04-16 15:28+0800\n"
+"PO-Revision-Date: 2007-02-12 00:19 +0800\n"
 "Last-Translator: Sharuzzaman Ahmat Raslan <sharuzzaman@myrealbox.com>\n"
 "Language-Team: Malay <translation-team-ms@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -406,14 +405,12 @@ msgid "Search for a string or a regular expression"
 msgstr "Cari rentetan atau regular expression"
 
 #: src/global.c:331
-#, fuzzy
 msgid "Move to the previous screen"
-msgstr "Pergi ke skrin terdahulu"
+msgstr "Pindah ke skrin sebelumnya"
 
 #: src/global.c:332
-#, fuzzy
 msgid "Move to the next screen"
-msgstr "Pergi ke skrin berikutnya"
+msgstr "Pindah ke skrin berikutnya"
 
 #: src/global.c:334
 msgid "Cut the current line and store it in the cutbuffer"
@@ -460,69 +457,56 @@ msgid "Unindent the current line"
 msgstr "Nyahindent baris semasa"
 
 #: src/global.c:352
-#, fuzzy
 msgid "Move forward one character"
 msgstr "Maju ke depan satu aksara"
 
 #: src/global.c:353
-#, fuzzy
 msgid "Move back one character"
 msgstr "Undur ke belakang satu aksara"
 
 #: src/global.c:355
-#, fuzzy
 msgid "Move forward one word"
 msgstr "Maju ke depan satu perkataan"
 
 #: src/global.c:356
-#, fuzzy
 msgid "Move back one word"
 msgstr "Undur belakang satu perkataan"
 
 #: src/global.c:358
-#, fuzzy
 msgid "Move to the previous line"
-msgstr "Pergi ke baris terdahulu"
+msgstr "Gerak ke baris sebelumnya"
 
 #: src/global.c:359
-#, fuzzy
 msgid "Move to the next line"
-msgstr "Pergi ke baris berikutnya"
+msgstr "Gerak ke baris berikutnya"
 
 #: src/global.c:361
-#, fuzzy
 msgid "Move to the beginning of the current line"
-msgstr "Pergi ke permulaan baris semasa"
+msgstr "Gerak ke permulaan baris semasa"
 
 #: src/global.c:363
-#, fuzzy
 msgid "Move to the end of the current line"
-msgstr "Pergi ke penghujung baris semasa"
+msgstr "Gerak ke penghujung baris semasa"
 
 #: src/global.c:366
-#, fuzzy
 msgid "Move to the beginning of the current paragraph"
-msgstr "Pergi ke permulaan baris semasa"
+msgstr "Pindah ke permulaan perenggan semasa"
 
 #: src/global.c:368
-#, fuzzy
 msgid "Move to the end of the current paragraph"
-msgstr "Justifikasi perenggan semasa"
+msgstr "Pindah ke penghujung perenggan semasa"
 
 #: src/global.c:371
-#, fuzzy
 msgid "Move to the first line of the file"
-msgstr "Pergi ke baris pertama fail"
+msgstr "Pindah ke baris pertama fail"
 
 #: src/global.c:373
-#, fuzzy
 msgid "Move to the last line of the file"
-msgstr "Pergi ke baris terakhir fail"
+msgstr "Pindah ke baris terakhir fail"
 
 #: src/global.c:375
-#, fuzzy
 msgid "Move to the matching bracket"
-msgstr "Pergi ke braket sepadan"
+msgstr "Pindah ke braket sepadan"
 
 #: src/global.c:377
 msgid "Scroll up one line without scrolling the cursor"
@@ -1125,7 +1109,6 @@ msgstr ""
 "\n"
 
 #: src/help.c:345
-#, fuzzy
 msgid ""
 "Execute Command Help Text\n"
 "\n"
@@ -1138,10 +1121,10 @@ msgid ""
 msgstr ""
 "Teks Bantuan Arahan Pelaksanaan\n"
 "\n"
-" Mod ini membenarkan anda untuk memasukkan keluaran arahan yang dijalankan "
-"oleh shell ke dalam buffer semasa (atau satu buffer baru dalam mod buffer "
-"pelbagai fail). Jika anda memerlukan buffer kosong lain, jangan masukkan "
-"sebarang arahan.\n"
+" Mod ini membenarkan anda untuk memasukkan keluaran sesuatu arahan yang "
+"dijalankan oleh shell ke dalam buffer semasa (atau satu buffer baru dalam "
+"mod buffer pelbagai fail). Jika anda memerlukan buffer kosong lain, jangan "
+"masukkan sebarang arahan.\n"
 "\n"
 " Kekunci fungsi berikut terdapat didalam mod Laksana Arahan:\n"
 "\n"
@@ -1205,9 +1188,8 @@ msgid "enable/disable"
 msgstr "enable/disable"
 
 #: src/help.c:446 src/help.c:497
-#, fuzzy
 msgid "Space"
-msgstr "Ganti"
+msgstr "Ruang"
 
 #: src/nano.c:567
 msgid "Key invalid in view mode"
@@ -1715,7 +1697,7 @@ msgstr "Masukkan nombor baris, nombor lajur"
 
 #: src/search.c:1015
 msgid "Come on, be reasonable"
-msgstr ""
+msgstr "Pastikannya wajar"
 
 #: src/search.c:1168
 msgid "Not a bracket"
@@ -1868,53 +1850,3 @@ msgstr "dan sesiapa yang kami lupa...."
 #: src/winio.c:3364
 msgid "Thank you for using nano!"
 msgstr "Terima kasih kerana menggunakan nano!"
-
-#~ msgid "Suspend"
-#~ msgstr "Gantung"
-
-#~ msgid "Go to beginning of paragraph; then of previous paragraph"
-#~ msgstr ""
-#~ "Pergi hingga ke permulaan perenggan semasa; kemudian ke perenggan "
-#~ "sebelumnya"
-
-#~ msgid "Go just beyond end of paragraph; then of next paragraph"
-#~ msgstr ""
-#~ "Pergi hingga ke penghujung perenggan semasa; kemudian ke perenggan "
-#~ "seterusnya"
-
-#~ msgid "Suspend the editor (if suspend is enabled)"
-#~ msgstr "Gantung penyunting (jika gantung dihidupkan)"
-
-#~ msgid "Scroll by line instead of half-screen"
-#~ msgstr "Gulung mengikut baris berbanding separuh skrin"
-
-#~ msgid "Missing key name"
-#~ msgstr "Nama kekunci hilang"
-
-#~ msgid "keybindings must begin with \"^\", \"M\", or \"F\"\n"
-#~ msgstr "ikatankekunci mesti bermula dengan \"^\", \"M\", atau \"F\"\n"
-
-#~ msgid "Must specify function to bind key to\n"
-#~ msgstr "Mesti menyatakan fungsi untuk mengikat kekunci ke\n"
-
-#~ msgid "Must specify menu bind key to (or \"all\")\n"
-#~ msgstr "Mesti menyatakan kekunci ikat ke menu (atau \"semua\")\n"
-
-#~ msgid "Could not map name \"%s\" to a menu\n"
-#~ msgstr "Tidak dapat memetakan nama \"%s\" ke menu\n"
-
-#~ msgid "Could not map name \"%s\" to a function\n"
-#~ msgstr "Tidak dapat memetakan nama \"%s\" ke fungsi\n"
-
-#~ msgid "Fatal error: no keys mapped for function \"%s\""
-#~ msgstr "Ralat maut: tiada kekunci dipetakan untuk fungsi \"%s\""
-
-#~ msgid ""
-#~ "Exiting.  Please use nano with the -I option if needed to adjust your "
-#~ "nanorc settings\n"
-#~ msgstr ""
-#~ "Keluar. Sila guna nano dengan pilihan -I jika perlu untuk mengubah "
-#~ "tetapan nanorc anda\n"
-
-#~ msgid "Invalid line or column number"
-#~ msgstr "Nombor baris atau lajur tidak sah"

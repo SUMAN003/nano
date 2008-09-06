@@ -1,15 +1,15 @@
 # Italian messages for nano.
-# Copyright (C) 2001-2006, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
 # This file is distributed under the same license as the nano package.
-# Marco Colombo <m.colombo@ed.ac.uk>, 2001-2008.
+# Marco Colombo <m.colombo@ed.ac.uk>, 2001-2006.
 # $Id$
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nano 2.1.2\n"
+"Project-Id-Version: nano 1.9.99pre0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-24 02:41-0400\n"
-"PO-Revision-Date: 2008-07-07 11:25+0100\n"
+"PO-Revision-Date: 2006-08-24 18:14+0100\n"
 "Last-Translator: Marco Colombo <m.colombo@ed.ac.uk>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -416,14 +416,12 @@ msgid "Search for a string or a regular expression"
 msgstr "Cerca una stringa o un'espressione regolare"
 
 #: src/global.c:331
-#, fuzzy
 msgid "Move to the previous screen"
-msgstr "Va alla schermata precedente"
+msgstr "Va alla pagina precedente"
 
 #: src/global.c:332
-#, fuzzy
 msgid "Move to the next screen"
-msgstr "Va alla schermata successiva"
+msgstr "Va alla pagina successiva"
 
 #: src/global.c:334
 msgid "Cut the current line and store it in the cutbuffer"
@@ -470,67 +468,54 @@ msgid "Unindent the current line"
 msgstr "Deindenta la riga corrente"
 
 #: src/global.c:352
-#, fuzzy
 msgid "Move forward one character"
 msgstr "Avanza di un carattere"
 
 #: src/global.c:353
-#, fuzzy
 msgid "Move back one character"
 msgstr "Arretra di un carattere"
 
 #: src/global.c:355
-#, fuzzy
 msgid "Move forward one word"
 msgstr "Avanza di una parola"
 
 #: src/global.c:356
-#, fuzzy
 msgid "Move back one word"
 msgstr "Arretra di una parola"
 
 #: src/global.c:358
-#, fuzzy
 msgid "Move to the previous line"
 msgstr "Va alla riga precedente"
 
 #: src/global.c:359
-#, fuzzy
 msgid "Move to the next line"
 msgstr "Va alla riga successiva"
 
 #: src/global.c:361
-#, fuzzy
 msgid "Move to the beginning of the current line"
 msgstr "Va all'inizio della riga corrente"
 
 #: src/global.c:363
-#, fuzzy
 msgid "Move to the end of the current line"
 msgstr "Va alla fine della riga corrente"
 
 #: src/global.c:366
-#, fuzzy
 msgid "Move to the beginning of the current paragraph"
-msgstr "Va all'inizio della riga corrente"
+msgstr "Va all'inizio del paragrafo corrente"
 
 #: src/global.c:368
-#, fuzzy
 msgid "Move to the end of the current paragraph"
-msgstr "Giustifica il paragrafo corrente"
+msgstr "Va alla fine del paragrafo corrente"
 
 #: src/global.c:371
-#, fuzzy
 msgid "Move to the first line of the file"
 msgstr "Va alla prima riga del file"
 
 #: src/global.c:373
-#, fuzzy
 msgid "Move to the last line of the file"
 msgstr "Va all'ultima riga del file"
 
 #: src/global.c:375
-#, fuzzy
 msgid "Move to the matching bracket"
 msgstr "Va alla parentesi corrispondente"
 
@@ -1147,7 +1132,6 @@ msgstr ""
 "\n"
 
 #: src/help.c:345
-#, fuzzy
 msgid ""
 "Execute Command Help Text\n"
 "\n"
@@ -1898,57 +1882,6 @@ msgstr "e chiunque altro abbiamo dimenticato..."
 #: src/winio.c:3364
 msgid "Thank you for using nano!"
 msgstr "Grazie di usare nano!"
-
-#~ msgid "Suspend"
-#~ msgstr "Sospendi"
-
-#~ msgid "Go to beginning of paragraph; then of previous paragraph"
-#~ msgstr "Va all'inizio del paragrafo; poi al paragrafo precedente"
-
-#~ msgid "Go just beyond end of paragraph; then of next paragraph"
-#~ msgstr "Va alla fine del paragrafo; poi al paragrafo successivo"
-
-#~ msgid "Suspend the editor (if suspend is enabled)"
-#~ msgstr "Sospendi l'editor (se la sospensione è abilitata)"
-
-#~ msgid "Scroll by line instead of half-screen"
-#~ msgstr "Scorrimento ad ogni riga invece che ad ogni metà schermata"
-
-#~ msgid "Missing key name"
-#~ msgstr "Nome di chiave mancante"
-
-#~ msgid "keybindings must begin with \"^\", \"M\", or \"F\"\n"
-#~ msgstr "le chiavi devono cominciare con \"^\", \"M\", o \"F\"\n"
-
-#~ msgid "Must specify function to bind key to\n"
-#~ msgstr "Occorre specificare una funzione a cui associare la chiave\n"
-
-#~ msgid "Must specify menu bind key to (or \"all\")\n"
-#~ msgstr ""
-#~ "Occorre specificare un menù a cui associare la chiave (oppure \"all\")\n"
-
-#~ msgid "Could not map name \"%s\" to a menu\n"
-#~ msgstr "Impossibile associare il nome \"%s\" a un menù\n"
-
-#~ msgid "Could not map name \"%s\" to a function\n"
-#~ msgstr "Impossibile associare il nome \"%s\" a una funzione\n"
-
-# FIXME
-#~ msgid "Sorry, keystr \"%s\" is an illegal binding\n"
-#~ msgstr "Spiacenti, la chiave \"%s\" è illegale\n"
-
-#~ msgid "Fatal error: no keys mapped for function \"%s\""
-#~ msgstr "Errore fatale: nessuna chiave associata alla funzione \"%s\""
-
-#~ msgid ""
-#~ "Exiting.  Please use nano with the -I option if needed to adjust your "
-#~ "nanorc settings\n"
-#~ msgstr ""
-#~ "Uscita. Usare nano con l'opzione -I se occorre modificare le impostazioni "
-#~ "di nanorc\n"
-
-#~ msgid "Invalid line or column number"
-#~ msgstr "Numero di riga o di colonna non valido"
 
 # FIXME
 #~ msgid "Unindent marked text"

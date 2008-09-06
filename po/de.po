@@ -1,16 +1,15 @@
 # German Messages for the nano editor
 # Copyright (C) 2000, 2001 Free Software Foundation, Inc.
-# This file is distributed under the same license as the nano package.
 # Karl Eichwalder <keichwa@gmx.net>, 2001.
 # Florian König <floki@bigfoot.com>, 2000, 2001.
-# Michael Piefel <piefel@informatik.hu-berlin.de>, 2001, 2002, 2003, 2004, 2005, 2006, 2008.
+# Michael Piefel <piefel@informatik.hu-berlin.de>, 2001, 2002, 2003, 2004, 2005, 2006.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nano 2.1.2\n"
+"Project-Id-Version: nano 1.9.99pre0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-24 02:41-0400\n"
-"PO-Revision-Date: 2008-06-26 09:25+0200\n"
+"PO-Revision-Date: 2006-08-31 14:55+0200\n"
 "Last-Translator: Michael Piefel <piefel@informatik.hu-berlin.de>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -414,14 +413,12 @@ msgid "Search for a string or a regular expression"
 msgstr "nach einer Zeichenkette oder einem regulären Ausdruck suchen"
 
 #: src/global.c:331
-#, fuzzy
 msgid "Move to the previous screen"
-msgstr "zum vorhergehenden Bildschirm springen"
+msgstr "zur vorhergehenden Seite springen"
 
 #: src/global.c:332
-#, fuzzy
 msgid "Move to the next screen"
-msgstr "zum folgenden Bildschirm springen"
+msgstr "zur folgenden Seite springen"
 
 #: src/global.c:334
 msgid "Cut the current line and store it in the cutbuffer"
@@ -468,67 +465,54 @@ msgid "Unindent the current line"
 msgstr "die aktuelle Zeile ausrücken"
 
 #: src/global.c:352
-#, fuzzy
 msgid "Move forward one character"
-msgstr "ein Zeichen vorwärts gehen"
+msgstr "Zum folgenden Zeichen springen"
 
 #: src/global.c:353
-#, fuzzy
 msgid "Move back one character"
-msgstr "ein Zeichen rückwärts gehen"
+msgstr "Zum vorhergehenden Zeichen springen"
 
 #: src/global.c:355
-#, fuzzy
 msgid "Move forward one word"
-msgstr "ein Wort vorwärts gehen"
+msgstr "Zum folgenden Wort springen"
 
 #: src/global.c:356
-#, fuzzy
 msgid "Move back one word"
-msgstr "ein Wort rückwärts gehen"
+msgstr "ein Wort zurück springen"
 
 #: src/global.c:358
-#, fuzzy
 msgid "Move to the previous line"
-msgstr "zur vorhergehenden Zeile gehen"
+msgstr "zur vorhergehenden Zeile springen"
 
 #: src/global.c:359
-#, fuzzy
 msgid "Move to the next line"
-msgstr "zur folgenden Zeile gehen"
+msgstr "zur folgenden Zeile springen"
 
 #: src/global.c:361
-#, fuzzy
 msgid "Move to the beginning of the current line"
-msgstr "zum Anfang der aktuellen Zeile springen"
+msgstr "zum Zeilenanfang springen"
 
 #: src/global.c:363
-#, fuzzy
 msgid "Move to the end of the current line"
-msgstr "zum Ende der aktuellen Zeile springen"
+msgstr "zum Zeilenende springen"
 
 #: src/global.c:366
-#, fuzzy
 msgid "Move to the beginning of the current paragraph"
-msgstr "zum Anfang der aktuellen Zeile springen"
+msgstr "zum Anfang des aktuellen Absatzes springen"
 
 #: src/global.c:368
-#, fuzzy
 msgid "Move to the end of the current paragraph"
-msgstr "Absatz ausrichten"
+msgstr "zum Ende des aktuellen Absatzes springen"
 
 #: src/global.c:371
-#, fuzzy
 msgid "Move to the first line of the file"
 msgstr "zur ersten Zeile der Datei springen"
 
 #: src/global.c:373
-#, fuzzy
 msgid "Move to the last line of the file"
 msgstr "zur letzten Zeile der Datei springen"
 
 #: src/global.c:375
-#, fuzzy
 msgid "Move to the matching bracket"
 msgstr "zur passenden Klammer springen"
 
@@ -906,7 +890,7 @@ msgstr "Keine Umwandlung aus DOS/Mac-Format"
 
 #: src/global.c:1373
 msgid "Suspension"
-msgstr "in den Hintergrund"
+msgstr "Suspendierung"
 
 #: src/help.c:238
 msgid ""
@@ -1140,7 +1124,6 @@ msgstr ""
 "\n"
 
 #: src/help.c:345
-#, fuzzy
 msgid ""
 "Execute Command Help Text\n"
 "\n"
@@ -1478,7 +1461,7 @@ msgstr "die zwei Hilfe-Zeilen nicht anzeigen"
 
 #: src/nano.c:873
 msgid "Enable suspension"
-msgstr "schieben in den Hintergrund (anhalten und zurück zur Shell) aktivieren"
+msgstr "Suspendierung (anhalten und zurück zur Shell) aktivieren"
 
 #: src/nano.c:877
 msgid "(ignored, for Pico compatibility)"
@@ -1882,59 +1865,6 @@ msgstr "und alle Nichtgenannten..."
 msgid "Thank you for using nano!"
 msgstr "Danke für die Benutzung von nano!"
 
-#~ msgid "Suspend"
-#~ msgstr "in den Hintergrund"
-
-#~ msgid "Go to beginning of paragraph; then of previous paragraph"
-#~ msgstr ""
-#~ "zum Anfang des aktuellen Absatzes springen; dann des vorigen Absatzes"
-
-#~ msgid "Go just beyond end of paragraph; then of next paragraph"
-#~ msgstr ""
-#~ "hinter das Ende des aktuellen Absatzes springen; dann des vorigen Absatzes"
-
-#~ msgid "Suspend the editor (if suspend is enabled)"
-#~ msgstr ""
-#~ "den Editor in den Hintergrund schieben (wenn „suspend“ angeschaltet ist)"
-
-#~ msgid "Scroll by line instead of half-screen"
-#~ msgstr "zeilenweise rollen (statt halb-bildschirm-weise)"
-
-#~ msgid "Missing key name"
-#~ msgstr "Fehlender Schlüsselname"
-
-#~ msgid "keybindings must begin with \"^\", \"M\", or \"F\"\n"
-#~ msgstr "Tastenkürzel müssen mit „^“, „M“ oder „F“ beginnen\n"
-
-#~ msgid "Must specify function to bind key to\n"
-#~ msgstr "Die an die Taste zu bindene Funktion muss angegeben werden\n"
-
-#~ msgid "Must specify menu bind key to (or \"all\")\n"
-#~ msgstr ""
-#~ "Das an die Taste zu bindene Menü (oder „all“) muss angegeben werden\n"
-
-#~ msgid "Could not map name \"%s\" to a menu\n"
-#~ msgstr "Konnte „%s“ nicht auf ein Menü binden\n"
-
-#~ msgid "Could not map name \"%s\" to a function\n"
-#~ msgstr "Konnte „%s“ nicht auf eine Funktion binden\n"
-
-#~ msgid "Sorry, keystr \"%s\" is an illegal binding\n"
-#~ msgstr "Tut mir Leid, keystr „%s“ ist keine legale Zuordnung\n"
-
-#~ msgid "Fatal error: no keys mapped for function \"%s\""
-#~ msgstr "Schwerwiegender Fehler: keine Tassten an Funktion „%s“ gebunden"
-
-#~ msgid ""
-#~ "Exiting.  Please use nano with the -I option if needed to adjust your "
-#~ "nanorc settings\n"
-#~ msgstr ""
-#~ "Beende. Bitte starten Sie nano bei Bedarf mit der Option „-I“, wenn Sie "
-#~ "Ihre nanorc-Einstellungen anpassen wollen\n"
-
-#~ msgid "Invalid line or column number"
-#~ msgstr "Ungültige Zeilen- oder Spaltennummer"
-
 #~ msgid "Prepending to %s failed: %s"
 #~ msgstr "Vorne an %s anfügen fehlgeschlagen: %s"
 
@@ -1996,6 +1926,9 @@ msgstr "Danke für die Benutzung von nano!"
 
 #~ msgid "Verbatim input"
 #~ msgstr "Direkte Eingabe"
+
+#~ msgid "Could not invoke \"%s\""
+#~ msgstr "Konnte „%s“ nicht aufrufen"
 
 #~ msgid "Search Cancelled"
 #~ msgstr "Suche abgebrochen"

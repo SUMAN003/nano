@@ -1,15 +1,14 @@
 # Catalan messages for the GNU nano editor.
-# Copyright © 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2008 Free Software Foundation, Inc.
-# This file is distributed under the same licence as the nano package.
-# Jordi Mallach <jordi@gnu.org>, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2008.
+# Copyright © 2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
+# Jordi Mallach <jordi@gnu.org>, 2000, 2001, 2002, 2003, 2004, 2005, 2006.
 # Miquel Vidal <miquel@sindominio.net>, 2001.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nano 2.1.0\n"
+"Project-Id-Version: nano 1.9.99pre0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-24 02:41-0400\n"
-"PO-Revision-Date: 2008-06-10 01:08+0200\n"
+"PO-Revision-Date: 2006-10-29 19:04+0200\n"
 "Last-Translator: Jordi Mallach <jordi@gnu.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "MIME-Version: 1.0\n"
@@ -412,14 +411,12 @@ msgid "Search for a string or a regular expression"
 msgstr "Cerca una cadena o expressió regular"
 
 #: src/global.c:331
-#, fuzzy
 msgid "Move to the previous screen"
-msgstr "Vés a la pàgina anterior"
+msgstr "Mou a la pàgina anterior"
 
 #: src/global.c:332
-#, fuzzy
 msgid "Move to the next screen"
-msgstr "Vés a la pàgina següent"
+msgstr "Mou a la pàgina següent"
 
 #: src/global.c:334
 msgid "Cut the current line and store it in the cutbuffer"
@@ -466,67 +463,54 @@ msgid "Unindent the current line"
 msgstr "Desajusta el fitxer actual"
 
 #: src/global.c:352
-#, fuzzy
 msgid "Move forward one character"
-msgstr "Vés endavant un caràcter"
+msgstr "Mou endavant un caràcter"
 
 #: src/global.c:353
-#, fuzzy
 msgid "Move back one character"
-msgstr "Vés enrere un caràcter"
+msgstr "Mou endarrere un caràcter"
 
 #: src/global.c:355
-#, fuzzy
 msgid "Move forward one word"
-msgstr "Vés endavant una paraula"
+msgstr "Mou endavant una paraula"
 
 #: src/global.c:356
-#, fuzzy
 msgid "Move back one word"
-msgstr "Vés enrere una paraula"
+msgstr "Mou enrere una paraula"
 
 #: src/global.c:358
-#, fuzzy
 msgid "Move to the previous line"
 msgstr "Vés a la línia anterior"
 
 #: src/global.c:359
-#, fuzzy
 msgid "Move to the next line"
 msgstr "Vés a la línia següent"
 
 #: src/global.c:361
-#, fuzzy
 msgid "Move to the beginning of the current line"
 msgstr "Vés al principi de la línia actual"
 
 #: src/global.c:363
-#, fuzzy
 msgid "Move to the end of the current line"
 msgstr "Vés al final de la línia actual"
 
 #: src/global.c:366
-#, fuzzy
 msgid "Move to the beginning of the current paragraph"
-msgstr "Vés al principi de la línia actual"
+msgstr "Vés al principi del paràgraf actual"
 
 #: src/global.c:368
-#, fuzzy
 msgid "Move to the end of the current paragraph"
-msgstr "Justifica el paràgraf actual"
+msgstr "Vés al final del paràgraf actual"
 
 #: src/global.c:371
-#, fuzzy
 msgid "Move to the first line of the file"
 msgstr "Vés a la primera línia del fitxer"
 
 #: src/global.c:373
-#, fuzzy
 msgid "Move to the last line of the file"
 msgstr "Vés a l'última línia del fitxer"
 
 #: src/global.c:375
-#, fuzzy
 msgid "Move to the matching bracket"
 msgstr "Vés a la clau corresponent"
 
@@ -1139,7 +1123,6 @@ msgstr ""
 "\n"
 
 #: src/help.c:345
-#, fuzzy
 msgid ""
 "Execute Command Help Text\n"
 "\n"
@@ -1153,10 +1136,11 @@ msgstr ""
 "Text d'ajuda d'Executa una ordre\n"
 "\n"
 " Aquest mode us permet inserir l'eixida d'una ordre executada per "
-"l'intèrpret al búfer actual (o un nou búfer al mode múltiples búfers de "
+"l'intèrpret al búfer actual (o un nou búfer en el mode múltiples búfers de "
 "fitxer). Si necessiteu un altre búfer en blanc, no introduïu cap ordre.\n"
 "\n"
-" Les següents tecles de funció estan disponibles al mode Executa una ordre:\n"
+" Les següents tecles de funció estan disponibles en el mode Executa una "
+"ordre:\n"
 "\n"
 
 #: src/help.c:358
@@ -1170,7 +1154,7 @@ msgid ""
 "showing the file being edited.  The status line is the third line from the "
 "bottom and shows important messages.  "
 msgstr ""
-"Text d'ajuda de nano\n"
+"text d'ajuda de nano\n"
 "\n"
 " L'editor nano està dissenyat per a emular la funcionalitat i la facilitat "
 "d'ús del Pico, l'editor de text de la UW. Hi ha quatre seccions a l'editor: "
@@ -1880,54 +1864,6 @@ msgstr "i per qualsevol dels qui ens hem oblidat esmentar..."
 msgid "Thank you for using nano!"
 msgstr "Gràcies per fer servir nano!"
 
-#~ msgid "Suspend"
-#~ msgstr "Suspèn"
-
-#, fuzzy
-#~ msgid "Go to beginning of paragraph; then of previous paragraph"
-#~ msgstr "Vés al principi del paràgraf actual"
-
-#, fuzzy
-#~ msgid "Go just beyond end of paragraph; then of next paragraph"
-#~ msgstr "Vés al final del paràgraf actual"
-
-#~ msgid "Suspend the editor (if suspend is enabled)"
-#~ msgstr "Suspèn l'editor (si la suspensió és habilitada)"
-
-#~ msgid "Scroll by line instead of half-screen"
-#~ msgstr "Desplaça't per línies en lloc de mitges pantalles"
-
-#~ msgid "Missing key name"
-#~ msgstr "Manca el nom de la clau"
-
-#~ msgid "keybindings must begin with \"^\", \"M\", or \"F\"\n"
-#~ msgstr "les assignacions de tecles han de començar amb «^», «M» o «F»\n"
-
-#~ msgid "Must specify function to bind key to\n"
-#~ msgstr "Heu d'especificar una funció a la qual assignar la tecla\n"
-
-#~ msgid "Must specify menu bind key to (or \"all\")\n"
-#~ msgstr "Heu d'especificar un menú al qual assignar la tecla (o «all»)\n"
-
-#~ msgid "Could not map name \"%s\" to a menu\n"
-#~ msgstr "No s'ha pogut assignar el nom «%s» a un menú\n"
-
-#~ msgid "Could not map name \"%s\" to a function\n"
-#~ msgstr "No s'ha pogut assignar «%s» a una funció\n"
-
-#~ msgid "Fatal error: no keys mapped for function \"%s\""
-#~ msgstr "Error fatal: no hi ha lletres asignades per a la funció «%s»"
-
-#~ msgid ""
-#~ "Exiting.  Please use nano with the -I option if needed to adjust your "
-#~ "nanorc settings\n"
-#~ msgstr ""
-#~ "S'està sortint. Useu nano amb l'opció -I si heu d'ajustar les vostres "
-#~ "preferències\n"
-
-#~ msgid "Invalid line or column number"
-#~ msgstr "El número de línia o columna és invàlid"
-
 #~ msgid "Indent marked text"
 #~ msgstr "Sagna el text marcat"
 
@@ -2009,6 +1945,9 @@ msgstr "Gràcies per fer servir nano!"
 
 #~ msgid "Word Count in Selection"
 #~ msgstr "Compte de paraules a la selecció"
+
+#~ msgid "Could not invoke \"%s\""
+#~ msgstr "No s'ha pogut iniciar «%s»"
 
 #~ msgid "Direction"
 #~ msgstr "Direcció"

@@ -1,22 +1,21 @@
 # Vietnamese translation for Nano.
-# Copyright © 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the nano package.
+# Copyright © 2007 Free Software Foundation, Inc.
 # Phan Vinh Thinh <teppi82@gmail.com>, 2005, 2006.
-# Clytie Siddall <clytie@riverland.net.au>, 2007-2008.
+# Clytie Siddall <clytie@riverland.net.au>, 2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nano 2.1.2\n"
+"Project-Id-Version: nano 2.0.6\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-24 02:41-0400\n"
-"PO-Revision-Date: 2008-06-26 22:42+0930\n"
+"PO-Revision-Date: 2007-09-19 22:19+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: LocFactoryEditor 1.7b3\n"
+"X-Generator: LocFactoryEditor 1.7b1\n"
 
 #: src/browser.c:220
 msgid "Go To Directory"
@@ -409,14 +408,12 @@ msgid "Search for a string or a regular expression"
 msgstr "Tìm một chuỗi hay biểu thức chính quy"
 
 #: src/global.c:331
-#, fuzzy
 msgid "Move to the previous screen"
-msgstr "Về màn hình trước"
+msgstr "Di chuyển tới màn hình trước"
 
 #: src/global.c:332
-#, fuzzy
 msgid "Move to the next screen"
-msgstr "Tới màn hình kế"
+msgstr "Di chuyển tới màn hình tiếp theo"
 
 #: src/global.c:334
 msgid "Cut the current line and store it in the cutbuffer"
@@ -463,69 +460,56 @@ msgid "Unindent the current line"
 msgstr "Hủy thụt lề dòng hiện tại"
 
 #: src/global.c:352
-#, fuzzy
 msgid "Move forward one character"
-msgstr "Tiếp tới một ký tự"
+msgstr "Di chuyển con trỏ một ký tự về bên phải"
 
 #: src/global.c:353
-#, fuzzy
 msgid "Move back one character"
-msgstr "Lùi lại một ký tự"
+msgstr "Di chuyển con trỏ một ký tự về bên trái"
 
 #: src/global.c:355
-#, fuzzy
 msgid "Move forward one word"
-msgstr "Tiếp tới một từ"
+msgstr "Di chuyển con trỏ một từ sang bên phải"
 
 #: src/global.c:356
-#, fuzzy
 msgid "Move back one word"
-msgstr "Lùi lại một từ"
+msgstr "Di chuyển con trỏ một từ sang bên trái"
 
 #: src/global.c:358
-#, fuzzy
 msgid "Move to the previous line"
-msgstr "Về dòng trước"
+msgstr "Di chuyển tới dòng trước đó"
 
 #: src/global.c:359
-#, fuzzy
 msgid "Move to the next line"
-msgstr "Tới dòng kế"
+msgstr "Di chuyển tới dòng tiếp theo"
 
 #: src/global.c:361
-#, fuzzy
 msgid "Move to the beginning of the current line"
-msgstr "Về đầu của dòng hiện tại"
+msgstr "Di chuyển con trỏ tới đầu dòng hiện thời"
 
 #: src/global.c:363
-#, fuzzy
 msgid "Move to the end of the current line"
-msgstr "Tới cuối của dòng hiện tại"
+msgstr "Di chuyển con trỏ tới cuối dòng hiện thời"
 
 #: src/global.c:366
-#, fuzzy
 msgid "Move to the beginning of the current paragraph"
-msgstr "Về đầu của dòng hiện tại"
+msgstr "Di chuyển tới đầu đoạn văn hiện thời"
 
 #: src/global.c:368
-#, fuzzy
 msgid "Move to the end of the current paragraph"
-msgstr "Sắp chữ đúng hàng cho đoạn văn hiện thời"
+msgstr "Di chuyển tới cuối đoạn văn hiện thời"
 
 #: src/global.c:371
-#, fuzzy
 msgid "Move to the first line of the file"
-msgstr "Về dòng đầu của tập tin"
+msgstr "Chuyển tới dòng đầu tiên của tập tin"
 
 #: src/global.c:373
-#, fuzzy
 msgid "Move to the last line of the file"
-msgstr "Tới dòng cuối của tập tin"
+msgstr "Chuyển tới dòng cuối cùng của tập tin"
 
 #: src/global.c:375
-#, fuzzy
 msgid "Move to the matching bracket"
-msgstr "Tới dấu ngoặc tương ứng"
+msgstr "Chuyển tới dấu ngoặc tương ứng"
 
 #: src/global.c:377
 msgid "Scroll up one line without scrolling the cursor"
@@ -1126,7 +1110,6 @@ msgstr ""
 "\n"
 
 #: src/help.c:345
-#, fuzzy
 msgid ""
 "Execute Command Help Text\n"
 "\n"
@@ -1139,11 +1122,11 @@ msgid ""
 msgstr ""
 "Văn bản của Trợ giúp cho Thực hiện Câu lệnh\n"
 "\n"
-" Chế độ này cho phép bạn chèn kết quả của một câu lệnh chạy bằng trình bao "
-"vào bộ đệm hiện thời (hoặc vào một bộ đệm mới ở chế độ đa bộ đệm). Nếu cần "
-"một bộ đệm trống khác, thì đừng nhập câu lệnh.\n"
+" Trình đơn này cho phép bạn chèn kết quả của một câu lệnh chạy bằng trình "
+"bao vào bộ đệm hiện thời (hoặc vào một bộ đệm mới trong chế độ đa bộ đệm). "
+"Nếu cần một bộ đệm trống khác, thì đừng nhập bất kỳ câu lệnh nào.\n"
 "\n"
-" Có thể dùng các phím sau trong chế độ Thực hiện Câu lệnh:\n"
+" Có thể dùng các phím sau trong chế độ này:\n"
 "\n"
 
 #: src/help.c:358
@@ -1202,9 +1185,8 @@ msgid "enable/disable"
 msgstr "bật/tắt"
 
 #: src/help.c:446 src/help.c:497
-#, fuzzy
 msgid "Space"
-msgstr "Thay thế"
+msgstr "Khoảng trắng"
 
 #: src/nano.c:567
 msgid "Key invalid in view mode"
@@ -1506,11 +1488,11 @@ msgstr "Sử dụng \"fg\" để quay lại nano.\n"
 
 #: src/nano.c:1242
 msgid "enabled"
-msgstr "đã bật"
+msgstr "bật"
 
 #: src/nano.c:1243
 msgid "disabled"
-msgstr "bị tắt"
+msgstr "tắt"
 
 #: src/nano.c:1427 src/winio.c:1284
 msgid "Unknown Command"
@@ -1720,7 +1702,7 @@ msgstr "Nhập số thứ tự dòng, cột"
 
 #: src/search.c:1015
 msgid "Come on, be reasonable"
-msgstr ""
+msgstr "Cố lên nào, phải có lý trí"
 
 #: src/search.c:1168
 msgid "Not a bracket"
@@ -1873,54 +1855,3 @@ msgstr "và những người khác mà chúng tôi quên..."
 #: src/winio.c:3364
 msgid "Thank you for using nano!"
 msgstr "Cảm ơn bạn đã dùng nano!"
-
-#~ msgid "Suspend"
-#~ msgstr "Ngưng"
-
-#~ msgid "Go to beginning of paragraph; then of previous paragraph"
-#~ msgstr "Về đầu của đoạn văn này; rồi về đầu của đoạn văn trước"
-
-#~ msgid "Go just beyond end of paragraph; then of next paragraph"
-#~ msgstr ""
-#~ "Tới đúng sau cuối của đoạn văn này; rồi tới đúng sau cuối của đoạn văn sau"
-
-#~ msgid "Suspend the editor (if suspend is enabled)"
-#~ msgstr "Ngưng trình soạn thảo (nếu tính năng ngưng đã được bật)"
-
-#~ msgid "Scroll by line instead of half-screen"
-#~ msgstr "Cuộn theo dòng thay vào theo nửa màn hình"
-
-#~ msgid "Missing key name"
-#~ msgstr "Thiếu tên khoá"
-
-#~ msgid "keybindings must begin with \"^\", \"M\", or \"F\"\n"
-#~ msgstr "tổ hợp phím phải bắt đầu với « ^ », « M » hoặc « F »\n"
-
-#~ msgid "Must specify function to bind key to\n"
-#~ msgstr "Phải ghi rõ chức năng với đó cần tổ hợp phím\n"
-
-#~ msgid "Must specify menu bind key to (or \"all\")\n"
-#~ msgstr ""
-#~ "Phải ghi rõ trình đơn với đó cần tổ hợp phím (hoặc đặt « all » (tất cả))\n"
-
-#~ msgid "Could not map name \"%s\" to a menu\n"
-#~ msgstr "Không thể ánh xạ tên « %s » với một trình đơn\n"
-
-#~ msgid "Could not map name \"%s\" to a function\n"
-#~ msgstr "Không thể ánh xạ tên « %s » với một chức năng\n"
-
-#~ msgid "Sorry, keystr \"%s\" is an illegal binding\n"
-#~ msgstr "Tiếc là không cho phép dùng tổ hợp phím « %s »\n"
-
-#~ msgid "Fatal error: no keys mapped for function \"%s\""
-#~ msgstr "Lỗi nghiêm trọng: chưa ánh xạ phím với chức năng « %s »"
-
-#~ msgid ""
-#~ "Exiting.  Please use nano with the -I option if needed to adjust your "
-#~ "nanorc settings\n"
-#~ msgstr ""
-#~ "Đang thoát... Hãy sử dụng trình soạn thảo nano với tùy chọn « -l » nếu cần "
-#~ "thiết, để điều chỉnh thiết lập nanorc của bạn\n"
-
-#~ msgid "Invalid line or column number"
-#~ msgstr "Sai số thứ tự dòng hoặc cột"
