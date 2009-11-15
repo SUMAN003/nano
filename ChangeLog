@@ -1,3 +1,32 @@
+GNU nano 2.1.99pre1 - 2009.11.15
+2009-11-14 Chris Allegretta <chrisa@asty.org>
+	* move.c (do_first_line, do_last_line): Just set edit_refresh_needed rather than 
+	  get messy.
+	* files.c (do_writeout) - Only mention file modification if we're writing the same
+	  file we originally opened.
+
+2009-11-13 Chris Allegretta <chrisa@asty.org>
+	* winio.c: Add new static maxsize to be able to easier calculation with
+	  softwrap.
+	* nano.c (do_mouse): Fix mouse support not working with soft wrapping.  Fixes
+	  Savannah bug 27549 reported by Hannes Schueller.
+
+2009-11-11 Chris Allegretta <chrisa@asty.org>
+	* winio.c: Large tweaking of cursor and text display based on COLS not COLS - 1, 
+	  due to finally understanding that display_string wasn't being called properly
+	  when softwrap was enabled.  Fixes Savnnah bug 27603, Return key doesn't scroll 
+	  viewport reported by Hannes Schueller.
+	* - Fix size_t formatting issues with -pedantic
+
+2009-11-09 Chris Allegretta <chrisa@asty.org>
+	* files.c (read_file): - Remove debugging messages from file load.  Fixes
+	  Savannah bug 27838.
+
+2009-11-07 Chris Allegretta <chrisa@asty.org>
+	* nano.h - Add bogus value at begin of flags enumeration because it
+	  causes casesens rcfile option to misbehave, reported by Helmut 
+	  Jarausch <jarausch@igpm.rwth-aachen.de>
+
 2009-11-03 Chris Allegretta <chrisa@asty.org>
 	* nano.h - Fix comma at end of enumerator list which angers -pedantic.
 	* rcfile.c - Add in specific check for UNDOABLE and fix declaration as

@@ -1667,17 +1667,53 @@ int do_mouse(void)
 
 	sameline = (mouse_y == openfile->current_y);
 
-	/* Move to where the click occurred. */
-	for (; openfile->current_y < mouse_y && openfile->current !=
-		openfile->filebot; openfile->current_y++)
-	    openfile->current = openfile->current->next;
-	for (; openfile->current_y > mouse_y && openfile->current !=
-		openfile->fileage; openfile->current_y--)
-	    openfile->current = openfile->current->prev;
+#ifdef DEBUG
+	    fprintf(stderr, "mouse_y = %d, current_y = %d\n", mouse_y, openfile->current_y);
+#endif
 
-	openfile->current_x = actual_x(openfile->current->data,
+ 	if (ISSET(SOFTWRAP)) {
+	    int i = 0;
+	    for (openfile->current = openfile->edittop;
+		 openfile->current->next && i < mouse_y;
+		 openfile->current = openfile->current->next, i++) {
+		openfile->current_y = i;
+		i += strlenpt(openfile->current->data) / COLS;
+	    }
+
+#ifdef DEBUG
+	    fprintf(stderr, "do_mouse(): moving to current_y = %d, i %d\n", openfile->current_y, i);
+	    fprintf(stderr, "            openfile->current->data = \"%s\"\n", openfile->current->data);
+#endif
+
+	    if (i > mouse_y) {
+		openfile->current = openfile->current->prev;
+		openfile->current_x = actual_x(openfile->current->data, mouse_x + (mouse_y - openfile->current_y) * COLS);
+#ifdef DEBUG
+	    fprintf(stderr, "do_mouse(): i > mouse_y, mouse_x = %d, current_x to = %d\n", mouse_x, openfile->current_x);
+#endif
+	    } else {
+	        openfile->current_x = actual_x(openfile->current->data, mouse_x);
+#ifdef DEBUG
+	    fprintf(stderr, "do_mouse(): i <= mouse_y, mouse_x = %d, setting current_x to = %d\n", mouse_x, openfile->current_x);
+#endif
+	    }
+
+	    openfile->placewewant = xplustabs();
+
+	} else {
+	    /* Move to where the click occurred. */
+	    for (; openfile->current_y < mouse_y && openfile->current !=
+		   openfile->filebot; openfile->current_y++)
+		openfile->current = openfile->current->next;
+	    for (; openfile->current_y > mouse_y && openfile->current !=
+		   openfile->fileage; openfile->current_y--)
+		openfile->current = openfile->current->prev;
+
+	    openfile->current_x = actual_x(openfile->current->data,
 		get_page_start(xplustabs()) + mouse_x);
-	openfile->placewewant = xplustabs();
+
+	    openfile->placewewant = xplustabs();
+	}
 
 #ifndef NANO_TINY
 	/* Clicking where the cursor is toggles the mark, as does
@@ -1737,7 +1773,7 @@ void precalc_multicolorinfo(void)
 
 
 #ifdef DEBUG
-	    fprintf(stderr, "working on lineno %zd\n", fileptr->lineno);
+	    fprintf(stderr, "working on lineno %lu\n", (unsigned long) fileptr->lineno);
 #endif
 
 		alloc_multidata_if_needed(fileptr);
@@ -1770,7 +1806,7 @@ void precalc_multicolorinfo(void)
 		    for (endptr = fileptr->next; endptr != NULL; endptr = endptr->next) {
 
 #ifdef DEBUG
-	    fprintf(stderr, "advancing to line %zd to find end...\n", endptr->lineno);
+	    fprintf(stderr, "advancing to line %lu to find end...\n", (unsigned long) endptr->lineno);
 #endif
 			/* Check for keyboard input  again */
 			if ((cur_check = time(NULL)) - last_check > 1) {
@@ -1798,18 +1834,18 @@ void precalc_multicolorinfo(void)
 			lines in between and the ends properly */
 		    fileptr->multidata[tmpcolor->id] |= CENDAFTER;
 #ifdef DEBUG
-		    fprintf(stderr, "marking line %zd as CENDAFTER\n", fileptr->lineno);
+		    fprintf(stderr, "marking line %lu as CENDAFTER\n", (unsigned long) fileptr->lineno);
 #endif
 		    for (fileptr = fileptr->next; fileptr != endptr; fileptr = fileptr->next) {
 			alloc_multidata_if_needed(fileptr);
 			fileptr->multidata[tmpcolor->id] = CWHOLELINE;
 #ifdef DEBUG
-			fprintf(stderr, "marking intermediary line %zd as CWHOLELINE\n", fileptr->lineno);
+			fprintf(stderr, "marking intermediary line %lu as CWHOLELINE\n", (unsigned long) fileptr->lineno);
 #endif
 		    }
 		    alloc_multidata_if_needed(endptr);
 #ifdef DEBUG
-		    fprintf(stderr, "marking line %zd as BEGINBEFORE\n", fileptr->lineno);
+		    fprintf(stderr, "marking line %lu as BEGINBEFORE\n", (unsigned long) fileptr->lineno);
 #endif
 		    endptr->multidata[tmpcolor->id] |= CBEGINBEFORE;
 		    /* We should be able to skip all the way to the line of the match.
@@ -1817,12 +1853,12 @@ void precalc_multicolorinfo(void)
 		    fileptr = endptr;
 		    startx = endmatch.rm_eo;
 #ifdef DEBUG
-		    fprintf(stderr, "jumping to line %zd pos %d to continue\n", endptr->lineno, startx);
+		    fprintf(stderr, "jumping to line %lu pos %d to continue\n", (unsigned long) endptr->lineno, startx);
 #endif
 		}
 		if (nostart && startx == 0) {
 #ifdef DEBUG
-		    fprintf(stderr, "no start found on line %zd, continuing\n", fileptr->lineno);
+		    fprintf(stderr, "no start found on line %lu, continuing\n", (unsigned long) fileptr->lineno);
 #endif
 		    fileptr->multidata[tmpcolor->id] = CNONE;
 		    continue;

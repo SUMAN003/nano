@@ -41,6 +41,9 @@ static bool disable_cursorpos = FALSE;
 	/* Should we temporarily disable constant cursor position
 	 * display? */
 
+static int maxrows = 0;
+	/* With soft wrapping, how many lines really fit on the curent page */
+
 /* Control character compatibility:
  *
  * - NANO_BACKSPACE_KEY is Ctrl-H, which is Backspace under ASCII, ANSI,
@@ -2437,14 +2440,15 @@ void reset_cursor(void)
     xpt = xplustabs();
 
     if (ISSET(SOFTWRAP)) {
-	openfile->current_y = 0;
 	filestruct *tmp;
-	for (tmp = openfile->edittop; tmp && tmp != openfile->current; tmp = tmp->next)
-	    openfile->current_y += 1 + strlenpt(tmp->data) / (COLS - 1);
+	openfile->current_y = 0;
 
-	openfile->current_y += xplustabs() / (COLS - 1);
+	for (tmp = openfile->edittop; tmp && tmp != openfile->current; tmp = tmp->next)
+	    openfile->current_y += 1 + strlenpt(tmp->data) / COLS;
+
+	openfile->current_y += xplustabs() / COLS;
 	if (openfile->current_y < editwinrows)
-	    wmove(edit, openfile->current_y, xpt % (COLS - 1));
+	    wmove(edit, openfile->current_y, xpt % COLS);
     } else {
 	openfile->current_y = openfile->current->lineno -
 	    openfile->edittop->lineno;
@@ -2864,7 +2868,13 @@ int update_line(filestruct *fileptr, size_t index)
 
     /* Expand the line, replacing tabs with spaces, and control
      * characters with their displayed forms. */
-    converted = display_string(fileptr->data, page_start, COLS, TRUE);
+    converted = display_string(fileptr->data, page_start, COLS, !ISSET(SOFTWRAP));
+
+#ifdef DEBUG
+    if (ISSET(SOFTWRAP) && strlen(converted) >= COLS - 2)
+	    fprintf(stderr, "update_line(): converted(1) line = %s\n", converted);
+#endif
+
 
     /* Paint the line. */
     edit_draw(fileptr, converted, line, page_start);
@@ -2877,16 +2887,20 @@ int update_line(filestruct *fileptr, size_t index)
 	    mvwaddch(edit, line, COLS - 1, '$');
     } else {
         int full_length = strlenpt(fileptr->data);
-	for (index += COLS - 1; index < full_length && line < editwinrows; index += COLS - 1) {
+	for (index += COLS; index <= full_length && line < editwinrows; index += COLS) {
 	    line++;
 #ifdef DEBUG
-	    fprintf(stderr, "update_line(): Softwrap code, moving to %d\n", line);
+	    fprintf(stderr, "update_line(): Softwrap code, moving to %d index %lu\n", line, (unsigned long) index);
 #endif
  	    blank_line(edit, line, 0, COLS);
 
 	    /* Expand the line, replacing tabs with spaces, and control
  	     * characters with their displayed forms. */
-	    converted = display_string(fileptr->data, index, COLS, TRUE);
+	    converted = display_string(fileptr->data, index, COLS, !ISSET(SOFTWRAP));
+#ifdef DEBUG
+	    if (ISSET(SOFTWRAP) && strlen(converted) >= COLS - 2)
+		fprintf(stderr, "update_line(): converted(2) line = %s\n", converted);
+#endif
 
 	    /* Paint the line. */
 	    edit_draw(fileptr, converted, line, index);
@@ -2923,6 +2937,26 @@ bool need_vertical_update(size_t pww_save)
 	get_page_start(openfile->placewewant);
 }
 
+/* When edittop changes, try and figure out how many lines
+ * we really have to work with (i.e. set maxrows) 
+ */
+void compute_maxrows(void)
+{
+    int n;
+    filestruct *foo = openfile->edittop;
+
+    maxrows = 0;
+    for (n = 0; n < editwinrows && foo; n++) {
+	maxrows += 1 - strlenpt(foo->data) / COLS;
+	foo = foo->next;
+    }
+
+#ifdef DEBUG
+    fprintf(stderr, "compute_maxrows(): maxrows = %ld\n", maxrows);
+#endif
+
+}
+
 /* Scroll the edit window in the given direction and the given number
  * of lines, and draw new lines on the blank lines left after the
  * scrolling.  direction is the direction to scroll, either UP_DIR or
@@ -2950,24 +2984,24 @@ void edit_scroll(scroll_dir direction, ssize_t nlines)
 	   fprintf(stderr, "Softwrap: Entering check for extracuzsoft\n");
 #endif
 	for (i = editwinrows, foo = openfile->edittop; foo && i > 0; i--, foo = foo->next) {
-	    ssize_t len = strlenpt(foo->data) / (COLS - 1);
+	    ssize_t len = strlenpt(foo->data) / COLS;
 	    if (len > 0)
 	        do_redraw = TRUE;
 	    i -= len;
 	}
 	if (foo) {
-	   extracuzsoft += strlenpt(foo->data) / (COLS - 1);
+	   extracuzsoft += strlenpt(foo->data) / COLS;
 #ifdef DEBUG
-	   fprintf(stderr, "Setting extracuzsoft to %zd due to strlen %zd of line %zd\n", extracuzsoft,
-		strlenpt(foo->data), foo->lineno);
+	   fprintf(stderr, "Setting extracuzsoft to %lu due to strlen %lu of line %lu\n", (unsigned long) extracuzsoft,
+		(unsigned long) strlenpt(foo->data), (unsigned long) foo->lineno);
 #endif
 
 
 	    /* Now account for whether the edittop line itself is >COLS, if scrolling down */
 	   for (foo = openfile->edittop; foo && extracuzsoft > 0; nlines++) {
-		extracuzsoft -= strlenpt(foo->data) / (COLS - 1) + 1;
+		extracuzsoft -= 1 + strlenpt(foo->data) / COLS;
 #ifdef DEBUG
- 		fprintf(stderr, "Edittop adjustment, setting nlines to %zd\n", nlines);
+ 		fprintf(stderr, "Edittop adjustment, setting nlines to %lu\n", (unsigned long) nlines);
 #endif
 		if (foo == openfile->filebot)
 		    break;
@@ -2976,7 +3010,7 @@ void edit_scroll(scroll_dir direction, ssize_t nlines)
 	}
     } else if (ISSET(SOFTWRAP) && direction == UP_DIR) {
 	for (foo = openfile->edittop, i = editwinrows; foo && i > 0; i--, foo = foo->prev) {
-	    if (strlenpt(foo->data) / (COLS - 1) > 0) {
+	    if (strlenpt(foo->data) / COLS > 0) {
 		do_redraw = TRUE;
 		break;
 	    }
@@ -3081,9 +3115,9 @@ void edit_redraw(filestruct *old_current, size_t pww_save)
      * window until it's onscreen and get out. */
     if (old_current->lineno < openfile->edittop->lineno ||
 	old_current->lineno >= openfile->edittop->lineno +
-	editwinrows || openfile->current->lineno <
+	maxrows || openfile->current->lineno <
 	openfile->edittop->lineno || openfile->current->lineno >=
-	openfile->edittop->lineno + editwinrows) {
+	openfile->edittop->lineno + maxrows) {
 
 	filestruct *old_edittop = openfile->edittop;
 	ssize_t nlines;
@@ -3098,7 +3132,7 @@ void edit_redraw(filestruct *old_current, size_t pww_save)
 	    if (old_edittop->lineno < openfile->edittop->lineno)
 		old_lineno = old_edittop->lineno;
 	    else
-		old_lineno = (old_edittop->lineno + editwinrows <=
+		old_lineno = (old_edittop->lineno + maxrows <=
 			openfile->filebot->lineno) ?
 			old_edittop->lineno + editwinrows :
 			openfile->filebot->lineno;
@@ -3138,6 +3172,8 @@ void edit_redraw(filestruct *old_current, size_t pww_save)
 	    edit_scroll(UP_DIR, -nlines);
 	else
 	    edit_scroll(DOWN_DIR, nlines);
+
+        compute_maxrows();
 
 #ifndef NANO_TINY
 	/* If the mark is on, update all the lines between the old first
@@ -3187,9 +3223,13 @@ void edit_refresh(void)
     filestruct *foo;
     int nlines;
 
+    /* Figure out what maxrows should really be */
+    if (ISSET(SOFTWRAP) && openfile->current->lineno > openfile->edittop->lineno)
+	compute_maxrows();
+
     if (openfile->current->lineno < openfile->edittop->lineno ||
 	openfile->current->lineno >= openfile->edittop->lineno +
-	editwinrows)
+	maxrows)
 	/* Put the top line of the edit window in range of the current
 	 * line. */
 	edit_update(
@@ -3246,7 +3286,7 @@ void edit_update(update_type location)
 
     for (; goal > 0 && foo->prev != NULL; goal--) {
 	if (ISSET(SOFTWRAP))
-	    goal -= strlenpt(foo->data) / (COLS - 1);
+	    goal -= strlenpt(foo->data) / COLS;
 	foo = foo->prev;
     }
     openfile->edittop = foo;

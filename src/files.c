@@ -515,8 +515,7 @@ void read_file(FILE *f, int fd, const char *filename, bool undoable)
 	nperror(filename);
     fclose(f);
     if (fd > 0) {
-	int closecode = close(fd);
-	fprintf(stderr, "Closecode = %d\n", closecode);
+	close(fd);
 	writable = is_file_writable(filename);
     }
 
@@ -2119,7 +2118,7 @@ bool do_writeout(bool exiting)
 		    }
 		}
 #ifndef NANO_TINY
-		if (openfile->current_stat && openfile->current_stat->st_mtime < st.st_mtime) {
+		if (name_exists && openfile->current_stat && openfile->current_stat->st_mtime < st.st_mtime) {
 		    i = do_yesno_prompt(FALSE,
 			_("File was modified since you opened it, continue saving ? "));
 		    if (i == 0 || i == -1)
