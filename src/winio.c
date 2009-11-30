@@ -2495,7 +2495,7 @@ void edit_draw(filestruct *fileptr, const char *converted, int
         if (fileptr->multidata == NULL && openfile->syntax
 		&& openfile->syntax->nmultis > 0) {
  	    int i;
-	    fileptr->multidata = nmalloc(openfile->syntax->nmultis * sizeof(short));
+	    fileptr->multidata = (short *) nmalloc(openfile->syntax->nmultis * sizeof(short));
             for (i = 0; i < openfile->syntax->nmultis; i++)
 		fileptr->multidata[i] = -1;	/* Assue this applies until we know otherwise */
 	}
@@ -2949,7 +2949,8 @@ void compute_maxrows(void)
 
     maxrows = 0;
     for (n = 0; n < editwinrows && foo; n++) {
-	maxrows += 1 - strlenpt(foo->data) / COLS;
+	maxrows ++;
+	n += strlenpt(foo->data) / COLS;
 	foo = foo->next;
     }
 
@@ -3037,6 +3038,9 @@ void edit_scroll(scroll_dir direction, ssize_t nlines)
 		break;
 	    openfile->edittop = openfile->edittop->next;
 	}
+	/* Don't over-scroll on long lines */
+	if (ISSET(SOFTWRAP))
+	    i -= strlenpt(openfile->edittop->data) / COLS;
     }
 
     compute_maxrows();
@@ -3156,11 +3160,7 @@ void edit_redraw(filestruct *old_current, size_t pww_save)
 	/* Put edittop in range of current, get the difference in lines
 	 * between the original edittop and the current edittop, and
 	 * then restore the original edittop. */
-	edit_update(
-#ifndef NANO_TINY
-		ISSET(SMOOTH_SCROLL) ? NONE :
-#endif
-		CENTER);
+	edit_update(NONE);
 
 	nlines = openfile->edittop->lineno - old_edittop->lineno;
 
@@ -3239,11 +3239,7 @@ void edit_refresh(void)
 
 	/* Put the top line of the edit window in range of the current
 	 * line. */
-	edit_update(
-#ifndef NANO_TINY
-		ISSET(SMOOTH_SCROLL) ? NONE :
-#endif
-		CENTER);
+	edit_update(NONE);
     }
 
     foo = openfile->edittop;

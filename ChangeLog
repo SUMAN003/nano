@@ -1,3 +1,53 @@
+GNU nano 2.2.0 - 2009.11.30
+2009-11-29 Chris Allegretta <chrisa@asty.org>
+	* prompt.c (get_prompt_string) - Universally handle help key when is disabled.  Fixes Savannah
+	  bug 28117 by David Lawrence Ramsey <pooka109@gmail.com>.
+	* chars.c, files.c: Add junk vars to silence the compiler.  Sigh.
+
+2009-11-29 David Lawrence Ramsey <pooka109@gmail.com>
+	* Change several *chars to const char, additional cleanups and casts to make compilers happier.
+	* global.c: Fix replace and insert file initializations for proper compilation options.
+	* nano.c (do_suspend): Update comments to reflect actual code path, bad Chris and thanks for
+	  noticing Jordi.
+	* configure.ac: Fix typos
+
+2009-11-27 Chris Allegretta <chrisa@asty.org>
+	* nano.c (do_suspend): Don't clear the screen but do move the cursor down to the last line
+	  first in an effort to not corrupt the screen, which contradicts Pico but is consistent
+	  with almost all other text editors.  Fixes Savannah bug 28110/Debian bug 460510
+	  reported by Tim Connors <reportbug@rather.puzzling.org>.
+	* doc/dyntax/makefile.nanorc - Sample Makefile highlighting based on wiki.linuxhelp.net version.
+
+2009-11-26 Chris Allegretta <chrisa@asty.org>
+	* winio.c (edit_scroll): Adjust for long lines when scrolling.
+	* rcfile.c (parse_rcfile), initialize size argument to getline(), fixes crash on FreeBSD 
+	  reported by Eitan Adler <eitanadlerlist@gmail.com>.
+
+2009-11-26 Jordi Mallach <jordi@gnu.org>
+	* doc/man/*: Update all man pages to escape unescaped hyphens.
+
+2009-11-24 Chris Allegretta <chrisa@asty.org>
+	* move.c (do_page_up, do_page_down): Make these functions work better with soft
+	  line wrapping.
+	* winio.c (compute_maxrows): Make maxrows calculation more accurate when all lines are > COLS.
+
+2009-11-22 Chris Allegretta <chrisa@asty.org>
+	* nano.c (main): Allow edit_refresh_needed to take effect when using --enable-tiny
+	  (fixes Savannah bug 28076 reported by David Lawrence Ramsey).
+
+2009-11-22 David Lawrence Ramsey <pooka109@gmail.com>
+	* nano.c (move_to_filestruct): Fix bug 71 (cut at top of line recenters)
+	* Fix compilation with --enable-tiny
+
+2009-11-22 Mike Frysinger <vapier@gentoo.org>
+	* doc/syntax/gentoo.nanorc: Tweak comment highlighting.
+
+GNU nano 2.1.99pre2 - 2009.11.21
+2009-11-21 Chris Allegretta <chrisa@asty.org>
+	* rcfile.c: Add unbinding keyword, fixes Savannah bug 22852 reported by frankd.
+	* prompt.c (update_statusbar_line): Set statusbar_pww when updating the line.
+	  Fixes Savannah bug 24957 by Mike Frysinger.
+
 2009-11-19 Chris Allegretta <chrisa@asty.org>
 	* nano.c (die_save_file) Try nd match the permissions of the file we were
 	  editing but only make a minimal effort to do so. Fixes Savannah bug 27273

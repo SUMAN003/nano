@@ -868,7 +868,7 @@ void update_statusbar_line(const char *curranswer, size_t index)
     free(expanded);
 
     wattroff(bottomwin, reverse_attr);
-
+    statusbar_pww = statusbar_xplustabs();
     reset_statusbar_cursor();
     wnoutrefresh(bottomwin);
 }
@@ -1070,7 +1070,6 @@ fprintf(stderr, "get_prompt_string: answer = \"%s\", statusbar_x = %lu\n", answe
 		}
 	} else
 #endif /* !NANO_TINY */
-#ifndef DISABLE_HELP
 	if (s && s->scfunc == DO_HELP_VOID) {
 		update_statusbar_line(answer, statusbar_x);
 
@@ -1082,7 +1081,6 @@ fprintf(stderr, "get_prompt_string: answer = \"%s\", statusbar_x = %lu\n", answe
 		 * prompt. */
 		finished = FALSE;
 	}
-#endif
 
 	/* If we have a shortcut with an associated function, break out
 	 * if we're finished after running or trying to run the
