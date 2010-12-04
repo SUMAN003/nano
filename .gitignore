@@ -24,3 +24,5 @@ Makefile.in
 
 /nano.spec
 /src/nano
+
+_old*
